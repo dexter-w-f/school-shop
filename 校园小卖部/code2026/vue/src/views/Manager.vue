@@ -29,6 +29,10 @@
               <el-icon><User /></el-icon>
               <span>用户管理</span>
             </template>
+            <el-menu-item index="/manager/user">
+              <el-icon><User /></el-icon>
+              <span>普通用户信息</span>
+            </el-menu-item>
             <el-menu-item index="/manager/admin">
               <el-icon><User /></el-icon>
               <span>管理员信息</span>
