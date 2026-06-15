@@ -18,15 +18,18 @@
           <el-table-column prop="account" label="账户余额"/>
 
           <el-table-column label="操作" width="180px" fixed="right">
+            <template #default="scope">
              <el-button type="primary">编辑</el-button>
-             <el-button type="danger">删除</el-button>
+             <el-button type="danger" @click="del(scope.row.id)">删除</el-button>
+            </template>
           </el-table-column>
         </el-table>
       </div>
     </div>
 
     <div class="card" >
-      <el-pagination background layout="total,prev, pager, next" :total="1"/>
+      <el-pagination v-model:current-page="data.pageNum" v-model:page-size="data.pageSize"
+                     @current-change="load" background layout="total,prev, pager, next" :total="data.total"/>
     </div>
   </div>
 </template>
@@ -34,19 +37,52 @@
 <script setup>
 import {reactive} from "vue";
 import {Search} from "@element-plus/icons-vue";
+import request from "@/utils/request";
+import {ElMessage} from "element-plus";
 
 const data = reactive({
   name:null,
-  tableData:[
-    {username:'aaa',name:'bbbb',role:'cccc',account:'232'}
-  ]
+  tableData:[],
+  total:0,
+  pageNum:1,
+  pageSize:5
 })
 
-const load = () => {
 
+//分页查询数据
+const load = () => {
+  request.get('/user/selectPag',{
+    params:{
+      pageNum:data.pageNum,
+      pageSize:data.pageSize,
+      name:data.name,
+    }
+      }
+
+  ).then(res =>{
+    if(res.code === '200'){
+      data.tableData = res.data?.list
+      data.total = res.data?.total
+    }else{
+      ElMessage.error(res.msg)
+    }
+      }
+  )
+}
+load()
+const reset = () =>{
+  data.name = null
+  load()
 }
 
-const reset = () =>{
-
+const del =(id)=>{
+  request.delete('/user/delete/'+ id).then(res =>{
+        if(res.code === '200'){
+          ElMessage.success('操作成功')
+          load()
+        }else{
+          ElMessage.error(res.msg)
+        }
+      })
 }
 </script>
