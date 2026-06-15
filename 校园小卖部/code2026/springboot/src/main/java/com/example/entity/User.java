@@ -2,7 +2,7 @@ package com.example.entity;
 
 import java.math.BigDecimal;
 
-public class User {
+public class User extends Account{
     private Integer id;
     private String username;
     private String password;

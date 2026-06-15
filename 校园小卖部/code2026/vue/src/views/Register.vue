@@ -1,7 +1,7 @@
 <template>
   <div class="login-container">
     <div class="login-box">
-      <div style="font-weight: bold; font-size: 30px; text-align: center; margin-bottom: 30px; color: #1967e3">欢 迎 登 录</div>
+      <div style="font-weight: bold; font-size: 30px; text-align: center; margin-bottom: 30px; color: #19e348">欢 迎 注 册</div>
       <el-form :model="data.form"  ref="formRef" :rules="data.rules">
         <el-form-item prop="username">
           <el-input :prefix-icon="User" size="large" v-model="data.form.username" placeholder="请输入账号" />
@@ -16,11 +16,11 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button size="large" type="primary" style="width: 100%" @click="login">登 录</el-button>
+          <el-button size="large"  style="width: 100%;background-color:#0c9c7a;border-color: #0c9c7a; color:white" @click="login">注 册</el-button>
         </el-form-item>
       </el-form>
       <div style="text-align: right;">
-        还没有账号？请 <a href="/register">注册</a>
+       已有账号？请 <a href="/login">登录</a>
       </div>
     </div>
 
@@ -82,7 +82,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #2e3143;
+  background: #3f833f;
   background-size: cover;
 }
 .login-box {

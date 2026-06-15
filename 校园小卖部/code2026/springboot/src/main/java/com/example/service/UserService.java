@@ -1,6 +1,8 @@
 package com.example.service;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.example.entity.Account;
 import com.example.entity.User;
 import com.example.exception.CustomException;
 import com.example.mapper.UserMapper;
@@ -45,6 +47,17 @@ public class UserService {
 
     public void update(User user) {
         userMapper.updateById(user);
+    }
+
+    public Account login(Account account) {
+        User dbUser = userMapper.selectByUsername(account.getUsername());
+        if (ObjectUtil.isNull(dbUser)) {
+            throw new CustomException("用户不存在");
+        }
+        if (!account.getPassword().equals(dbUser.getPassword())) {
+            throw new CustomException("账号或密码错误");
+        }
+        return dbUser;
     }
 }
 

@@ -24,3 +24,9 @@ th {
     box-shadow: 0 0 10px rgba(0,0,0,.1);
 }
 
+.front-container{
+    width: 60%;
+    margin: 0 auto;
+    padding-top: 20px;
+    min-height: 100vh
+}
