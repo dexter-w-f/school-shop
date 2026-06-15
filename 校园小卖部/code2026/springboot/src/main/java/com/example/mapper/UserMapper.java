@@ -8,4 +8,10 @@ import java.util.List;
 public interface UserMapper {
     List<User> selectAll(String name);
     void deleteById(Integer id);
+
+    void insert(User user);
+
+    User selectByUsername(String username);
+
+    void updateById(User user);
 }
