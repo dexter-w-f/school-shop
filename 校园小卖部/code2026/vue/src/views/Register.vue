@@ -9,14 +9,12 @@
         <el-form-item prop="password">
           <el-input :prefix-icon="Lock" size="large" v-model="data.form.password" placeholder="请输入密码" show-password />
         </el-form-item>
-        <el-form-item prop="role">
-          <el-select size="large" style="width: 100%" v-model="data.form.role">
-            <el-option value="管理员" label="管理员"></el-option>
-            <el-option value="普通用户" label="普通用户"></el-option>
-          </el-select>
+        <el-form-item prop="newPassword">
+          <el-input :prefix-icon="Lock" size="large" v-model="data.form.newPassword" placeholder="请确认密码" show-password />
         </el-form-item>
+
         <el-form-item>
-          <el-button size="large"  style="width: 100%;background-color:#0c9c7a;border-color: #0c9c7a; color:white" @click="login">注 册</el-button>
+          <el-button size="large"  style="width: 100%;background-color:#0c9c7a;border-color: #0c9c7a; color:white" @click="register">注 册</el-button>
         </el-form-item>
       </el-form>
       <div style="text-align: right;">
@@ -35,7 +33,7 @@
   import router from "@/router";
 
   const data = reactive({
-    form: { role: '管理员' },
+    form: { role: '普通用户' },
     rules: {
       username: [
         { required: true, message: '请输入账号', trigger: 'blur' },
@@ -43,26 +41,24 @@
       password: [
         { required: true, message: '请输入密码', trigger: 'blur' },
       ],
+      newPassword: [
+        { required: true, message: '请确认密码', trigger: 'blur' },
+      ]
     }
   })
 
   const formRef = ref()
 
   // 点击登录按钮的时候会触发这个方法
-  const login = () => {
+  const register = () => {
     formRef.value.validate((valid => {
       if (valid) {
         // 调用后台的接口
-        request.post('/login', data.form).then(res => {
+        request.post('/register', data.form).then(res => {
           if (res.code === '200') {
-            ElMessage.success("登录成功")
+            ElMessage.success("注册成功")
+            router.push('/login')
 
-            localStorage.setItem('system-user', JSON.stringify(res.data))
-            if(res.data.role === '管理员'){
-              router.push('/manager/home')
-            }else{
-              router.push('/front/home')
-            }
           } else {
             ElMessage.error(res.msg)
           }

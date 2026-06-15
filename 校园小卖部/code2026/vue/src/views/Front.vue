@@ -15,10 +15,9 @@
          </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click.native="logout">退出登录</el-dropdown-item>
-              <el-dropdown-item>Action 2</el-dropdown-item>
+              <el-dropdown-item @click.native="router.push('/front/person')">个人信息</el-dropdown-item>
               <el-dropdown-item>Action 3</el-dropdown-item>
-
+              <el-dropdown-item @click.native="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -43,6 +42,7 @@ const data = reactive({
 const logout = () => {
   localStorage.removeItem('system-user')
   router.push('/login')
+  ElMessage.success('退出成功')
 }
 
 </script>

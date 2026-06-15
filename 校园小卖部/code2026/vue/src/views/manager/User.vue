@@ -53,8 +53,6 @@
               <el-button type="primary">点击上传图片</el-button>
             </el-upload>
         </el-form-item>
-
-
       </el-form>
       <template #footer>
         <div class="dialog-footer">
