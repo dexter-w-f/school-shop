@@ -12,6 +12,8 @@ const router = createRouter({
         { path: 'home', component: () => import('@/views/manager/Home.vue')},
         { path: 'admin', component: () => import('@/views/manager/Admin.vue')},
         { path: 'user', component: () => import('@/views/manager/User.vue')},
+        { path: 'person', component: () => import('@/views/manager/Person.vue')},
+        { path: 'password', component: () => import('@/views/manager/Password.vue')}
 
       ]
     },
@@ -21,7 +23,8 @@ const router = createRouter({
           redirect: '/front/home',
           children: [
               { path: 'home', component: () => import('@/views/front/Home.vue')},
-              { path: 'person', component: () => import('@/views/front/Person.vue')}
+              { path: 'person', component: () => import('@/views/front/Person.vue')},
+              { path: 'password', component: () => import('@/views/front/Password.vue')}
 
           ]
       },

@@ -1,6 +1,7 @@
 package com.example.controller;
 
 import com.example.common.Result;
+import com.example.entity.Admin;
 import com.example.entity.User;
 import com.example.service.UserService;
 import com.github.pagehelper.PageInfo;
@@ -45,7 +46,15 @@ public class UserController {
        userService.add(user);
        return Result.success();
    }
-   @PutMapping("/update")
+
+    @GetMapping("/selectById/{id}")
+    public Result selectById(@PathVariable Integer id) {
+       User user = userService.selectById(id);
+        return Result.success(user);
+    }
+
+
+    @PutMapping("/update")
     public Result update(@RequestBody User user){
        userService.update(user);
        return Result.success();

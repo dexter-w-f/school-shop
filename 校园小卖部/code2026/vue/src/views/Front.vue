@@ -16,7 +16,7 @@
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item @click.native="router.push('/front/person')">个人信息</el-dropdown-item>
-              <el-dropdown-item>Action 3</el-dropdown-item>
+              <el-dropdown-item @click.native="router.push('/front/password')">修改密码</el-dropdown-item>
               <el-dropdown-item @click.native="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -25,7 +25,7 @@
       </div>
     </div>
     <div style="background-color:#869dca">
-      <router-view />
+      <router-view @updateUser="updateUser" />
     </div>
   </div>
 
@@ -38,11 +38,19 @@ import {ElMessage} from "element-plus";
 const data = reactive({
   user: JSON.parse(localStorage.getItem('system-user') || '{}')
 })
-
+if(!data.user?.id){
+  router.push('/login')
+}
 const logout = () => {
   localStorage.removeItem('system-user')
   router.push('/login')
   ElMessage.success('退出成功')
+}
+
+const updateUser = () => {
+  const newUser = JSON.parse(localStorage.getItem('system-user') || '{}')
+  // 使用 Object.assign 保持响应式
+  Object.assign(data.user, newUser)
 }
 
 </script>

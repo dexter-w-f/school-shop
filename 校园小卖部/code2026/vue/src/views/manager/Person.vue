@@ -1,9 +1,7 @@
 <template>
-  <div class="front-container" style="width: 40%">
-    <div class="card" style="padding: 20px">
-     <div style="font-size: 20px;margin-bottom: 40px; text-align: center">
-       个人信息页面
-     </div>
+  <div >
+    <div class="card" style="width: 50%">
+
       <el-form  ref="formRef" :model="data.user" :rules="data.rules" label-width="80px" style="padding-right: 30px">
         <el-form-item prop="avatar" label="头像" >
           <el-upload
@@ -23,9 +21,7 @@
         <el-form-item prop="name" label="姓名" >
           <el-input v-model="data.user.name" placeholder="请输入姓名" autocomplete="off" />
         </el-form-item>
-        <el-form-item prop="account"  label="账户余额">
-          <div style="color:red; font-weight: bold">￥{{data.user.account}}</div>
-        </el-form-item>
+
 
         <div style="text-align: center">
           <el-button type="primary" size="large" @click="update">保 存</el-button>
@@ -58,7 +54,7 @@ const data = reactive({
   }
 })
 const loadUser = () => {
-  request.get(`/user/selectById/${data.user.id}`).then(res =>{
+  request.get(`/admin/selectById/${data.user.id}`).then(res =>{
     if (res.code === '200') {
       // 使用 Object.assign 保持响应式
       Object.assign(data.user, res.data)
@@ -80,7 +76,7 @@ const handleFileUpload = (res) =>{
 }
 
 const update = () => {
-  request.put('/user/update', data.user).then(res => {
+  request.put('/admin/update', data.user).then(res => {
     if (res.code === '200') {
       ElMessage.success('更新成功')
       loadUser()

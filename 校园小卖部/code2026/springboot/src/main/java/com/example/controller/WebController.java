@@ -63,6 +63,9 @@ public class WebController {
         if ("管理员".equals(account.getRole())) {
             adminService.updatePassword(account);
         }
+        if ("普通用户".equals(account.getRole())) {
+            userService.updatePassword(account);
+        }
         return Result.success();
     }
 

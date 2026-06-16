@@ -39,6 +39,14 @@
               <span>管理员信息</span>
             </el-menu-item>
           </el-sub-menu>
+          <el-menu-item index="/manager/person">
+            <el-icon><User /></el-icon>
+            <span>个人信息</span>
+          </el-menu-item>
+          <el-menu-item index="/manager/password">
+            <el-icon><Lock /></el-icon>
+            <span>修改密码</span>
+          </el-menu-item>
           <el-menu-item @click="logout">
             <el-icon><SwitchButton /></el-icon>
             <span>退出系统</span>
@@ -74,7 +82,7 @@ const updateUser = () => {
 const logout = () => {
   router.push('/login')
   ElMessage.success('退出成功')
-  localStorage.removeItem('code2026-user')
+  localStorage.removeItem('system-user')
 }
 </script>
 
