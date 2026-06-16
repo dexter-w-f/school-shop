@@ -1,0 +1,219 @@
+<template>
+  <div>
+
+    <div class="card" style="margin-bottom: 5px;">
+      <el-input v-model="data.name" style="width: 300px; margin-right: 10px" placeholder="请输入名称查询"></el-input>
+      <el-button type="primary" @click="load">查询</el-button>
+      <el-button type="info" style="margin: 0 10px" @click="reset">重置</el-button>
+    </div>
+
+    <div class="card" style="margin-bottom: 5px">
+      <div style="margin-bottom: 10px">
+        <el-button type="primary" @click="handleAdd">新增</el-button>
+      </div>
+      <el-table :data="data.tableData" stripe>
+        <el-table-column prop="name" label="名称"></el-table-column>
+        <el-table-column prop="img" label="图片">
+          <template #default="scope">
+            <el-image v-if="scope.row.img" :src="scope.row.img" :preview-src-list="[scope.row.img]" preview-teleported style="width: 40px; height: 40px"></el-image>
+          </template>
+        </el-table-column>
+        <el-table-column prop="price" label="价格"></el-table-column>
+        <el-table-column prop="description" label="简介"></el-table-column>
+        <el-table-column prop="content" label="详情"></el-table-column>
+        <el-table-column prop="store" label="库存"></el-table-column>
+        <el-table-column prop="categoryName" label="分类名称"></el-table-column>
+        <el-table-column prop="status" label="上架状态"></el-table-column>
+        <el-table-column prop="views" label="浏览量"></el-table-column>
+        <el-table-column prop="saleCount" label="销量"></el-table-column>
+        <el-table-column prop="time" label="创建时间"></el-table-column>
+
+        <el-table-column label="操作" align="center" width="160">
+          <template #default="scope">
+            <el-button type="primary" @click="handleEdit(scope.row)">编辑</el-button>
+            <el-button type="danger" @click="handleDelete(scope.row.id)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
+    <div class="card" >
+      <el-pagination @current-change="load" background layout="total, prev, pager, next" v-model:page-size="data.pageSize" v-model:current-page="data.pageNum" :total="data.total"/>
+    </div>
+
+    <el-dialog title="商品信息" width="50%" v-model="data.formVisible" :close-on-click-modal="false" destroy-on-close>
+      <el-form ref="formRef" :model="data.form" :rules="data.rules" label-width="80px" style="padding-right: 30px;padding-top: 20px">
+
+        <el-form-item prop="name" label="名称">
+          <el-input v-model="data.form.name" placeholder="请输入"></el-input>
+        </el-form-item>
+        <el-form-item prop="img" label="图片">
+          <el-upload :action="uploadUrl" list-type="picture" :on-success="handleImgSuccess">
+            <el-button type="primary">上传图片</el-button>
+          </el-upload>
+        </el-form-item>
+        <el-form-item prop="price" label="价格">
+          <el-input-number :min="0" v-model="data.form.price" placeholder="请输入"></el-input-number>
+        </el-form-item>
+        <el-form-item prop="description" label="简介">
+          <el-input v-model="data.form.description" placeholder="请输入"></el-input>
+        </el-form-item>
+
+        <el-form-item prop="store" label="库存">
+          <el-input v-model="data.form.store" placeholder="请输入"></el-input>
+        </el-form-item>
+        <el-form-item prop="categoryId" label="分类">
+         <el-select style="width: 100%" v-model="data.form.categoryId" placeholder="请选择">
+           <el-option v-for="item in data.categoryList" :key="item.id" :label="item.name" :value="item.id"></el-option>
+         </el-select>
+        </el-form-item>
+        <el-form-item prop="status" label="上架状态">
+          <el-radio-group v-model="data.form.status">
+            <el-radio-button label="上架" value="上架"></el-radio-button>
+            <el-radio-button label="下架" value="下架"></el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item prop="content" label="详情">
+          <el-input v-model="data.form.content" type="textarea" placeholder="请输入"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="data.formVisible = false">取 消</el-button>
+        <el-button type="primary" @click="save">保 存</el-button>
+      </span>
+      </template>
+    </el-dialog>
+
+  </div>
+</template>
+
+<script setup>
+import request from "@/utils/request";
+import {reactive,ref} from "vue";
+import {ElMessageBox, ElMessage} from "element-plus";
+const uploadUrl = import.meta.env.VITE_BASE_URL + '/files/upload'
+const formRef = ref()
+const data = reactive({
+  pageNum: 1,
+  pageSize: 10,
+  total: 0,
+  formVisible: false,
+  form: {},
+  tableData: [],
+  categoryList: [],
+  name: null,
+  rules: {
+    name: [
+      { required: true, message: '请输入名称', trigger: 'blur' }
+    ],
+    img: [
+      { required: true, message: '请输入图片', trigger: 'blur' }
+    ],
+    price: [
+      { required: true, message: '请输入价格', trigger: 'blur' }
+    ],
+    description: [
+      { required: true, message: '请输入简介', trigger: 'blur' }
+    ],
+    content: [
+      { required: true, message: '请输入详情', trigger: 'blur' }
+    ],
+    store: [
+      { required: true, message: '请输入库存', trigger: 'blur' }
+    ],
+    categoryId: [
+      { required: true, message: '请选择分类', trigger: 'change' }
+    ]
+  }
+})
+const handleImgSuccess = (res) => {
+  data.form.img = res.data  // res.data就是文件上传返回的文件路径，获取到路径后赋值表单的属性
+}
+request.get('/category/selectAll').then(res =>{
+  data.categoryList = res.data
+})
+
+// 分页查询
+const load = () => {
+  request.get('/goods/selectPage', {
+    params: {
+      pageNum: data.pageNum,
+      pageSize: data.pageSize,
+      name: data.name
+    }
+  }).then(res => {
+    data.tableData = res.data?.list
+    data.total = res.data?.total
+  })
+}
+//
+load()
+// 新增
+const handleAdd = () => {
+  data.form = { status: '上架',price: 0}
+  data.formVisible = true
+}
+
+// 编辑
+const handleEdit = (row) => {
+  data.form = JSON.parse(JSON.stringify(row))
+  data.formVisible = true
+}
+
+// 新增保存
+const add = () => {
+  request.post('/goods/add', data.form).then(res => {
+    if (res.code === '200') {
+      load()
+      ElMessage.success('操作成功')
+      data.formVisible = false
+    } else {
+      ElMessage.error(res.msg)
+    }
+  })
+}
+
+// 编辑保存
+const update = () => {
+  request.put('/goods/update', data.form).then(res => {
+    if (res.code === '200') {
+      load()
+      ElMessage.success('操作成功')
+      data.formVisible = false
+    } else {
+      ElMessage.error(res.msg)
+    }
+  })
+}
+
+// 弹窗保存
+const save = () => {
+  formRef.value.validate(valid => {
+    if (valid) {
+      data.form.id ? update() : add()
+    }
+  })
+}
+
+// 删除
+const handleDelete = (id) => {
+  ElMessageBox.confirm('删除后数据无法恢复，您确定删除吗?', '删除确认', { type: 'warning' }).then(res => {
+    request.delete('/goods/delete/' + id).then(res => {
+      if (res.code === '200') {
+        load()
+        ElMessage.success('操作成功')
+      } else {
+        ElMessage.error(res.msg)
+      }
+    })
+  }).catch(err => {})
+}
+
+// 重置
+const reset = () => {
+  data.name = null
+  load()
+}
+
+</script>
