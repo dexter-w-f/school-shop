@@ -16,7 +16,8 @@
         <el-table-column label="名称" prop="name"></el-table-column>
         <el-table-column label="头像">
           <template #default="scope">
-            <el-image :src="scope.row.avatar" style="width: 40px; height: 40px; border-radius: 50%"></el-image>
+            <el-image v-if="scope.row.avatar" :src="scope.row.avatar"  :preview-src-list="[scope.row.avatar]" preview-teleported
+                      style="width: 40px; height: 40px; border-radius: 50%"></el-image>
           </template>
         </el-table-column>
         <el-table-column label="角色" prop="role"></el-table-column>

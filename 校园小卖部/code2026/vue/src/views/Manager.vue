@@ -34,6 +34,10 @@
               <el-icon><Document /></el-icon>
               <span>商品分类</span>
             </el-menu-item>
+            <el-menu-item index="/manager/goods">
+              <el-icon><Document /></el-icon>
+              <span>商品信息</span>
+            </el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="user">
             <template #title>

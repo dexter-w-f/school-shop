@@ -19,9 +19,9 @@ public class CopyUtils {
     // 拷贝代码小工具
     public static void main(String[] args) {
         // 复制源文件前缀
-        String sourceName = "Admin";
+        String sourceName = "Category";
         // 复制后的目标文件前缀
-        String targetName = "Category";
+        String targetName = "Goods";
 
         // 复制一整套的 controller、Service、Mapper、Mapper.xml
         copyMapperXml(sourceName, targetName);
