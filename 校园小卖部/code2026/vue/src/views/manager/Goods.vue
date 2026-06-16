@@ -74,7 +74,16 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item prop="content" label="详情">
-          <el-input v-model="data.form.content" type="textarea" placeholder="请输入"></el-input>
+         <div style="border: 1px solid #ccc;width: 100%">
+           <Toolbar style="border-bottom:1px solid #ccc " :editor="editorRef" :mode="mode" />
+           <Editor style="height: 500px;overflow-y:hidden; " v-model="data.form.content"
+                      :mode="mode" :defaultConfig="editorConfig" @onCreated="handleCreated"
+           />
+
+
+         </div>
+
+
         </el-form-item>
       </el-form>
       <template #footer>
@@ -92,6 +101,11 @@
 import request from "@/utils/request";
 import {reactive,ref} from "vue";
 import {ElMessageBox, ElMessage} from "element-plus";
+
+import '@wangeditor/editor/dist/css/style.css';
+import {onBeforeUnmount,shallowRef} from "vue";
+import {Editor,Toolbar } from '@wangeditor/editor-for-vue';
+
 const uploadUrl = import.meta.env.VITE_BASE_URL + '/files/upload'
 const formRef = ref()
 const data = reactive({
@@ -127,6 +141,27 @@ const data = reactive({
     ]
   }
 })
+//初始化
+const baseUrl = import.meta.env.VITE_BASE_URL
+const editorRef = shallowRef() //编辑器实例
+const mode = 'default'
+const editorConfig = { MENU_CONF:{} }
+//图片上传配置
+editorConfig.MENU_CONF['uploadImage']={
+
+  server: baseUrl + '/files/wang/upload',//服务端图片上传接口
+   fieldName:'file',
+}
+onBeforeUnmount(()=>{
+  const editor = editorRef.value
+  if(editor ==  null) return
+  editor.destroy()
+})
+const handleCreated = (editor) => {
+  editorRef.value = editor
+}
+
+
 const handleImgSuccess = (res) => {
   data.form.img = res.data  // res.data就是文件上传返回的文件路径，获取到路径后赋值表单的属性
 }
