@@ -9,7 +9,8 @@
         left join category on `goods`.category_id = category.id
         <where>
             <if test="name != null"> and `goods`.name like concat('%', #{name}, '%')</if>
-         <if test="categoryId != null"> and `goods`.category_id = #{categoryId}</if>
+            <if test="categoryId != null"> and `goods`.category_id = #{categoryId}</if>
+            <if test="status != null"> and `goods`.status = #{status}</if>
 
         </where>
         order by `goods`.id desc

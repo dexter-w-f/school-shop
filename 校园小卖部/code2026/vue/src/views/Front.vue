@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div style="height: 60px; background-color: #2e3143; display: flex; align-items: center; border-bottom: 1px solid #ddd">
+    <div style="height: 60px; background-color: #e8e9ed; display: flex; align-items: center; border-bottom: 1px solid #ddd">
       <div style="flex: 1">
         <div style="padding-left: 20px; display: flex; align-items: center">
           <img src="@/assets/imgs/logo.png" alt="" style="width: 40px">
@@ -28,7 +28,7 @@
       <router-view @updateUser="updateUser" />
     </div>
   </div>
-
+<footer></footer>
 </template>
 <script setup>
 import { reactive } from "vue";
