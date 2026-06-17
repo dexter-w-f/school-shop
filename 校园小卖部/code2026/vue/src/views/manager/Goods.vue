@@ -3,6 +3,9 @@
 
     <div class="card" style="margin-bottom: 5px;">
       <el-input v-model="data.name" style="width: 300px; margin-right: 10px" placeholder="请输入名称查询"></el-input>
+      <el-select style="width: 300px; margin-right: 10px" v-model="data.categoryId" placeholder="请选择商品分类">
+        <el-option v-for="item in data.categoryList" :key="item.id" :label="item.name" :value="item.id"></el-option>
+      </el-select>
       <el-button type="primary" @click="load">查询</el-button>
       <el-button type="info" style="margin: 0 10px" @click="reset">重置</el-button>
     </div>
@@ -11,18 +14,22 @@
       <div style="margin-bottom: 10px">
         <el-button type="primary" @click="handleAdd">新增</el-button>
       </div>
-      <el-table :data="data.tableData" stripe>
-        <el-table-column prop="name" label="名称"></el-table-column>
+      <el-table tooltip-effect="dark myEff" :data="data.tableData" stripe>
+        <el-table-column prop="name" label="名称" show-overflow-tooltip></el-table-column>
         <el-table-column prop="img" label="图片">
           <template #default="scope">
-            <el-image v-if="scope.row.img" :src="scope.row.img" :preview-src-list="[scope.row.img]" preview-teleported style="width: 40px; height: 40px"></el-image>
+            <el-image v-if="scope.row.img" :src="scope.row.img" :preview-src-list="[scope.row.img]" preview-teleported style="width: 100px; height: 100px"></el-image>
           </template>
         </el-table-column>
         <el-table-column prop="price" label="价格"></el-table-column>
-        <el-table-column prop="description" label="简介"></el-table-column>
-        <el-table-column prop="content" label="详情"></el-table-column>
+        <el-table-column prop="description" label="简介" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="content" label="详情">
+          <template #default="scope">
+            <el-button type="primary" @click="view(scope.row.content)">查看详情</el-button>
+          </template>
+        </el-table-column>
         <el-table-column prop="store" label="库存"></el-table-column>
-        <el-table-column prop="categoryName" label="分类名称"></el-table-column>
+        <el-table-column prop="categoryId" label="分类名称"></el-table-column>
         <el-table-column prop="status" label="上架状态"></el-table-column>
         <el-table-column prop="views" label="浏览量"></el-table-column>
         <el-table-column prop="saleCount" label="销量"></el-table-column>
@@ -56,7 +63,7 @@
           <el-input-number :min="0" v-model="data.form.price" placeholder="请输入"></el-input-number>
         </el-form-item>
         <el-form-item prop="description" label="简介">
-          <el-input v-model="data.form.description" placeholder="请输入"></el-input>
+          <el-input type="textarea" :rows="3" v-model="data.form.description" placeholder="请输入"></el-input>
         </el-form-item>
 
         <el-form-item prop="store" label="库存">
@@ -82,8 +89,6 @@
 
 
          </div>
-
-
         </el-form-item>
       </el-form>
       <template #footer>
@@ -91,6 +96,15 @@
         <el-button @click="data.formVisible = false">取 消</el-button>
         <el-button type="primary" @click="save">保 存</el-button>
       </span>
+      </template>
+    </el-dialog>
+
+    <el-dialog title="商品详情" width="50%" v-model="data.viewVisible" :close-on-click-modal="false" destroy-on-close>
+      <div class="editor-content-view goods-detail-content" style="padding: 20px" v-html="data.content"></div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="data.viewVisible = false">关 闭</el-button>
+        </span>
       </template>
     </el-dialog>
 
@@ -117,6 +131,9 @@ const data = reactive({
   tableData: [],
   categoryList: [],
   name: null,
+  categoryId: null,
+  viewVisible: false,
+  content: null,
   rules: {
     name: [
       { required: true, message: '请输入名称', trigger: 'blur' }
@@ -161,6 +178,10 @@ const handleCreated = (editor) => {
   editorRef.value = editor
 }
 
+const view = (content) => {
+  data.content = content
+  data.viewVisible = true
+}
 
 const handleImgSuccess = (res) => {
   data.form.img = res.data  // res.data就是文件上传返回的文件路径，获取到路径后赋值表单的属性
@@ -169,13 +190,16 @@ request.get('/category/selectAll').then(res =>{
   data.categoryList = res.data
 })
 
+
+
 // 分页查询
 const load = () => {
   request.get('/goods/selectPage', {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
-      name: data.name
+      name: data.name,
+      categoryId: data.categoryId
     }
   }).then(res => {
     data.tableData = res.data?.list
@@ -248,7 +272,15 @@ const handleDelete = (id) => {
 // 重置
 const reset = () => {
   data.name = null
+  data.categoryId = null
   load()
 }
 
 </script>
+
+<style scoped>
+.goods-detail-content :deep(img) {
+  max-width: 100%;
+  height: auto;
+}
+</style>

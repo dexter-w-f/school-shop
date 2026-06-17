@@ -38,6 +38,10 @@
               <el-icon><Document /></el-icon>
               <span>商品信息</span>
             </el-menu-item>
+            <el-menu-item index="/manager/carousel">
+              <el-icon><Document /></el-icon>
+              <span>轮播图信息</span>
+            </el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="user">
             <template #title>

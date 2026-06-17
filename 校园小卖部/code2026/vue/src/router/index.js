@@ -16,7 +16,7 @@ const router = createRouter({
         { path: 'password', component: () => import('@/views/manager/Password.vue')},
         { path: 'category', component: () => import('@/views/manager/Category.vue')},
         { path: 'goods', component: () => import('@/views/manager/Goods.vue')},
-
+        { path: 'carousel', component: () => import('@/views/manager/Carousel.vue')}
       ]
     },
       {

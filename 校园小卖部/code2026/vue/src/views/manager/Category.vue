@@ -125,8 +125,6 @@ const save = () => {
       data.form.id ? update() : add()
     }
   })
-  // data.form有id就是更新，没有就是新增
-  data.form.id ? update() : add()
 }
 
 // 删除

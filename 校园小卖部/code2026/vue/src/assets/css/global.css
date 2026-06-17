@@ -30,3 +30,7 @@ th {
     padding-top: 20px;
     min-height: 100vh
 }
+
+.myEff {
+    max-width: 50%;
+}

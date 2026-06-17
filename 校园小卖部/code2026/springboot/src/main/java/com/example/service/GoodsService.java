@@ -1,5 +1,6 @@
 package com.example.service;
 
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.example.entity.Account;
 import com.example.entity.Goods;
@@ -10,6 +11,7 @@ import com.github.pagehelper.PageInfo;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -25,6 +27,10 @@ public class GoodsService {
      * 新增
      */
     public void add(Goods goods) {
+        goods.setViews(0);
+        goods.setSaleCount(0);
+         String now = DateUtil.now();
+        goods.setTime(now);
         goodsMapper.insert(goods);
     }
 
