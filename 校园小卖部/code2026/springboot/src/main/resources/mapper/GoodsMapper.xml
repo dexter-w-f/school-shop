@@ -38,6 +38,7 @@
             <if test="views !=null">views,</if>
             <if test="saleCount !=null">sale_count,</if>
             <if test="time !=null">time,</if>
+            <if test="recommend !=null">recommend,</if>
         </trim>
         values
         <trim prefix="(" suffix=")" suffixOverrides=",">
@@ -53,6 +54,7 @@
             <if test="views !=null">#{views},</if>
             <if test="saleCount !=null">#{saleCount},</if>
             <if test="time !=null">#{time},</if>
+            <if test="recommend !=null">#{recommend},</if>
         </trim>
     </insert>
 
@@ -94,6 +96,9 @@
             </if>
             <if test="time != null">
                 time = #{time},
+            </if>
+            <if test="recommend !=null">
+                recommend = #{recommend},
             </if>
         </set>
         where id = #{id}

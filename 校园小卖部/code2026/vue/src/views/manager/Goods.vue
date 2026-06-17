@@ -80,6 +80,14 @@
             <el-radio-button label="下架" value="下架"></el-radio-button>
           </el-radio-group>
         </el-form-item>
+        <el-form-item prop="recommend" label="推荐">
+          <el-radio-group v-model="data.form.recommend">
+            <el-radio-button label="否" value="否"></el-radio-button>
+            <el-radio-button label="是" value="是"></el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+
+
         <el-form-item prop="content" label="详情">
          <div style="border: 1px solid #ccc;width: 100%">
            <Toolbar style="border-bottom:1px solid #ccc " :editor="editorRef" :mode="mode" />
@@ -124,7 +132,7 @@ const uploadUrl = import.meta.env.VITE_BASE_URL + '/files/upload'
 const formRef = ref()
 const data = reactive({
   pageNum: 1,
-  pageSize: 10,
+  pageSize: 5,
   total: 0,
   formVisible: false,
   form: {},
@@ -210,7 +218,8 @@ const load = () => {
 load()
 // 新增
 const handleAdd = () => {
-  data.form = { status: '上架',price: 0}
+  data.form = { status: '上架',price: 0,recommend: '否'}
+
   data.formVisible = true
 }
 

@@ -16,6 +16,15 @@ public class Goods {
     private Integer views;
     private Integer saleCount;
     private String time;
+    private String recommend;
+
+    public String getRecommend() {
+        return recommend;
+    }
+
+    public void setRecommend(String recommend) {
+        this.recommend = recommend;
+    }
 
     public String getDescription() {
         return description;

@@ -4,7 +4,7 @@
       <div style="flex:1">
         <el-carousel height="450px">
           <el-carousel-item v-for="item in data.carouselList" :key="item.id">
-            <img :src="item.img" style="width: 100%; height: 450px">
+            <img @click="router.push('/front/goodsDetail?id=' + item.goodsId)" :src="item.img" style="width: 100%; height: 450px;cursor: pointer">
           </el-carousel-item>
         </el-carousel>
       </div>
