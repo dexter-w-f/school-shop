@@ -8,10 +8,17 @@
           </el-carousel-item>
         </el-carousel>
       </div>
-      <div class="card" style="width: 300px">
+      <div class="card" style="width: 200px">
         <div style="padding-bottom: 5px;border-bottom: 1px solid red">
-          <div style="color:red;font-size: 20px; font-weight: bold;margin-left: 2px">
-            推荐商品
+          <div style="color:red;font-size: 20px; font-weight: bold;margin-left: 2px">推荐商品</div>
+        </div>
+        <div style="padding: 20px 0">
+          <div class="top-item" @click="router.push('/front/goodsDetail?id=' + item.id)" style="cursor: pointer;display: flex;grid-gap: 10px;margin-bottom: 20px" v-for="item in data.recommendGoods" :key="item.id">
+            <img style="width: 70px;height: 70px" :src="item.img">
+            <div>
+              <div class="line2" style="margin-bottom: 5px">{{ item.name }}</div>
+              <div style="color: red"><span>￥</span><b>{{ item.price }}</b></div>
+            </div>
           </div>
         </div>
       </div>
@@ -77,6 +84,7 @@ import request from "@/utils/request"
 const data = reactive({
   carouselList: [],
   hotGoods:[],
+  recommendGoods:[],
   newGoods:[]
 })
 
@@ -100,6 +108,13 @@ request.get('/goods/selectAll',{
   data.newGoods = res.data.splice(0,4)
 })
 
+request.get('/goods/selectAll',{
+  params:{
+    status:'上架'
+  }
+}).then(res => {
+  data.recommendGoods = res.data.filter(v => v.recommend === '是').splice(0,5)
+})
 
 </script>
 
@@ -110,5 +125,7 @@ request.get('/goods/selectAll',{
 .item:hover{
   border: 1px solid red
 }
-
+.top-item:hover{
+  color: red;
+}
 </style>

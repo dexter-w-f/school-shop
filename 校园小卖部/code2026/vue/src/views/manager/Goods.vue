@@ -31,6 +31,12 @@
         <el-table-column prop="store" label="库存"></el-table-column>
         <el-table-column prop="categoryId" label="分类名称"></el-table-column>
         <el-table-column prop="status" label="上架状态"></el-table-column>
+        <el-table-column label="推荐" prop="recommend">
+          <template #default="scope">
+            <el-switch @change="updateRecommend(scope.row)" style="--el-switch-on-color: #13ce66"
+                       v-model="scope.row.recommendActive" active-text="是" inactive-text="否"></el-switch>
+          </template>
+        </el-table-column>
         <el-table-column prop="views" label="浏览量"></el-table-column>
         <el-table-column prop="saleCount" label="销量"></el-table-column>
         <el-table-column prop="time" label="创建时间"></el-table-column>
@@ -80,12 +86,7 @@
             <el-radio-button label="下架" value="下架"></el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item prop="recommend" label="推荐">
-          <el-radio-group v-model="data.form.recommend">
-            <el-radio-button label="否" value="否"></el-radio-button>
-            <el-radio-button label="是" value="是"></el-radio-button>
-          </el-radio-group>
-        </el-form-item>
+
 
 
         <el-form-item prop="content" label="详情">
@@ -211,6 +212,9 @@ const load = () => {
     }
   }).then(res => {
     data.tableData = res.data?.list
+    data.tableData.forEach(v => {
+      v.recommendActive = v.recommend === '是'
+    })
     data.total = res.data?.total
   })
 }
@@ -240,6 +244,12 @@ const add = () => {
       ElMessage.error(res.msg)
     }
   })
+}
+
+const updateRecommend = (row) => {
+  data.form.id = row.id
+  data.form.recommend = row.recommendActive ? '是' : '否'
+  update()
 }
 
 // 编辑保存
