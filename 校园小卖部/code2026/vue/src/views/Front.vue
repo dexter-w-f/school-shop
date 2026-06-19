@@ -38,6 +38,8 @@
     <div style="background-color:#ced4df">
       <router-view @updateUser="updateUser" />
     </div>
+
+
   </div>
 
 </template>

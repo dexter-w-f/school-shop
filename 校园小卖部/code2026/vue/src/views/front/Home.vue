@@ -33,7 +33,7 @@
         <div @click="router.push('/front/goods')" style="cursor: pointer;font-size: 13px">查看更多</div>
       </div>
       <div style="margin-bottom: 40px">
-        <el-row gutter="20">
+        <el-row :gutter="20">
           <el-col :span="6" v-for="item in data.hotGoods" :key="item.id">
             <div  @click="router.push('/front/goodsDetail?id=' + item.id)"  class="item" style="width: 100%; border-radius: 5px;height: 280px" >
               <img :src="item.img" style="width: 100%;height:200px; border-radius: 5px 5px 0 0">
@@ -58,7 +58,7 @@
         <div @click="router.push('/front/goods')" style="cursor: pointer;font-size: 13px">查看更多</div>
       </div>
       <div>
-        <el-row gutter="20">
+        <el-row :gutter="20">
           <el-col :span="6" v-for="item in data.newGoods" :key="item.id">
             <div  @click="router.push('/front/goodsDetail?id=' + item.id)" class="item" style="width: 100%; border-radius: 5px;height: 280px" >
               <img :src="item.img" style="width: 100%;height:200px; border-radius: 5px 5px 0 0">
