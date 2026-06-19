@@ -4,11 +4,14 @@
       <img :src="data.goods.img" style="width: 300px;height: 300px;">
       <div style="flex: 1">
         <div style="display: flex; align-items: flex-start; grid-gap: 20px ;justify-content: space-between; margin-bottom: 10px">
-        <div style="font-size: 22px;font-weight: bold;line-height: 25px">
+        <div style="font-size: 22px;font-weight: bold;line-height: 25px;flex: 1">
           <el-tag style="margin-right: 5px;background-color: red;color: white;"  type="danger" v-if="data.goods.recommend === '是'">推荐</el-tag>
           {{data.goods.name}}</div>
-          <div style="width: 60px;cursor: pointer;color: #666">
+          <div style="width: 60px;cursor: pointer;color: #666" @click="addCollect" v-if="!data.userCollect?.id">
             <el-icon style="position: relative;top:3px" size="18"><Star /></el-icon>收藏
+          </div>
+          <div style="width: 100px;cursor: pointer;color: orange" @click="removeCollect" v-if="data.userCollect?.id">
+            <el-icon style="position: relative;top:3px" size="18"><StarFilled /></el-icon>取消收藏
           </div>
         </div>
         <div style="margin-bottom: 20px">
@@ -46,13 +49,57 @@
 import {reactive} from "vue";
 import router from "@/router";
 import request from "@/utils/request";
+import {ElMessage} from "element-plus";
 const data = reactive({
+  user: JSON.parse(localStorage.getItem('system-user') || '{}'),
   id:router.currentRoute.value.query.id,
   goods:{},
   num:1,
   current:'商品详情',
   commentList:[],
+  userCollect: {}
 })
+//查询当前商品是否被当前登录用户收藏
+const loadCollect = () => {
+  request.get('/collect/selectAll', {
+    params: {
+      goodsId: data.id,
+      userId: data.user.id
+    }
+  }).then(res => {
+    if (res.data?.length > 0){
+      data.userCollect = res.data[0]
+    }else{
+      data.userCollect = {}
+    }
+  })
+}
+loadCollect()
+//取消收藏
+const removeCollect = () => {
+  request.delete('/collect/delete/' + data.userCollect.id).then(res => {
+    if (res.code === '200') {
+      ElMessage.success('操作成功')
+      loadCollect()
+    } else {
+      ElMessage.error(res.msg)
+    }
+  })
+}
+
+const addCollect = () => {
+  request.post('/collect/add',{
+    goodsId:data.id,
+    userId: data.user.id
+  }).then(res => {
+    if (res.code === '200') {
+      ElMessage.success('操作成功')
+      loadCollect()
+    } else {
+      ElMessage.error(res.msg)
+    }
+  })
+}
 
 const changeTab = (tabName) => {
   data.current = tabName

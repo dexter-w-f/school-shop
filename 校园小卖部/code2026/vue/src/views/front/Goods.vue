@@ -14,7 +14,7 @@
       </div>
     </div>
     <div v-if="data.total > 0">
-      <el-row gutter="20">
+      <el-row :gutter="20">
         <el-col :span="6" v-for="item in data.tableData" :key="item.id">
           <div  @click="router.push('/front/goodsDetail?id=' + item.id)" class="card goods-item"
                 style="width: 100%;padding: 0; border-radius: 5px;margin-bottom: 20px" >
