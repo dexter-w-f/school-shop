@@ -5,11 +5,13 @@ import cn.hutool.core.util.ObjectUtil;
 import com.example.entity.Account;
 import com.example.entity.Goods;
 import com.example.exception.CustomException;
+import com.example.mapper.CartMapper;
 import com.example.mapper.GoodsMapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -22,7 +24,8 @@ public class GoodsService {
 
     @Resource
     private GoodsMapper goodsMapper;
-
+    @Resource
+    CartMapper cartMapper;
     /**
      * 新增
      */
@@ -37,8 +40,10 @@ public class GoodsService {
     /**
      * 删除
      */
+    @Transactional
     public void deleteById(Integer id) {
         goodsMapper.deleteById(id);
+        cartMapper.deleteByGoodsId(id);
     }
 
     /**
@@ -46,6 +51,9 @@ public class GoodsService {
      */
     public void updateById(Goods goods) {
         goodsMapper.updateById(goods);
+        if(goods.getStatus().equals("下架")){
+            cartMapper.deleteByGoodsId(goods.getId());
+        }
     }
 
     /**

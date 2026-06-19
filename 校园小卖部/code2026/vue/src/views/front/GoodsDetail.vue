@@ -22,7 +22,7 @@
         <div  style="margin-bottom: 20px;padding: 10px;background-color: lavenderblush;border-radius: 5px;line-height: 25px;text-align: justify">{{data.goods.description}}</div>
         <div>
           <el-input-number style="width: 150px;height: 40px;" :min="1" v-model="data.num"></el-input-number>
-          <el-button style="height: 40px;margin-left: 5px" type="danger">加入购物车</el-button>
+          <el-button @click="addCart" style="height: 40px;margin-left: 5px" type="danger">加入购物车</el-button>
           <el-button style="height: 40px;margin-left: 5px" type="danger">立即购买</el-button>
         </div>
       </div>
@@ -59,6 +59,21 @@ const data = reactive({
   commentList:[],
   userCollect: {}
 })
+
+const addCart = () => {
+  request.post('/cart/add',{
+    goodsId:data.id,
+    userId: data.user.id,
+    num:data.num
+  }).then(res => {
+    if (res.code === '200') {
+      ElMessage.success('加入购物车成功')
+    } else {
+      ElMessage.error(res.msg)
+    }
+  })
+}
+
 //查询当前商品是否被当前登录用户收藏
 const loadCollect = () => {
   request.get('/collect/selectAll', {

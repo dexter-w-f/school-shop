@@ -64,6 +64,7 @@ const load = () => {
     params: {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
+      sataus: '上架',
       name: data.name,
       categoryId: data.categoryId
     }

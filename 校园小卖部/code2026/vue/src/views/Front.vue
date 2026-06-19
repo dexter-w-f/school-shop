@@ -12,6 +12,7 @@
           <el-menu router :default-active="router.currentRoute.value.path" style="background-color:#313237" ellipsis mode="horizontal">
             <el-menu-item  index='/front/home'>首页</el-menu-item>
             <el-menu-item  index='/front/goods'>精选商品</el-menu-item>
+            <el-menu-item  index='/front/cart'>购物车</el-menu-item>
           </el-menu>
         </div>
            <div style="width: fit-content" v-if="router.currentRoute.value.path !== '/front/goods'">
@@ -27,6 +28,7 @@
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item @click.native="router.push('/front/userCollect')">我的收藏</el-dropdown-item>
+
               <el-dropdown-item @click.native="router.push('/front/person')">个人信息</el-dropdown-item>
               <el-dropdown-item @click.native="router.push('/front/password')">修改密码</el-dropdown-item>
               <el-dropdown-item @click.native="router.push('/front/userRecharge')">我的充值</el-dropdown-item>
