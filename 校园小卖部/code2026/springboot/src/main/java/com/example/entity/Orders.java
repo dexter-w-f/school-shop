@@ -12,8 +12,36 @@ public class Orders {
     private String status;
     private String time;
     private String deliverType;
+    private String address;
+    private String deliver;
     private List<Cart> cartList;
     private List<OrderDetail> orderDetailList;
+    private String goodsName;
+
+
+    public String getGoodsName() {
+        return goodsName;
+    }
+
+    public void setGoodsName(String goodsName) {
+        this.goodsName = goodsName;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getDeliver() {
+        return deliver;
+    }
+
+    public void setDeliver(String deliver) {
+        this.deliver = deliver;
+    }
 
     public List<OrderDetail> getOrderDetailList() {
         return orderDetailList;

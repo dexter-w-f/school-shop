@@ -7,11 +7,15 @@
     <select id="selectAll" resultType="com.example.entity.Orders">
         select orders.*, user.name as userName from `orders`
         left join user on orders.user_id = user.id
+        left join order_detail on order_detail.order_id = order.id
         <where>
             <if test="orderNo != null"> and orders.order_no like concat('%', #{orderNo}, '%')</if>
+            <if test="goodsName != null">and order_detail.goods_name like concat('%',#{goodsName},'%')</if>
             <if test="userId != null"> and orders.user_id = #{userId}</if>
         </where>
+        group by orders.id
         order by orders.id desc
+
     </select>
 
     <select id="selectById" resultType="com.example.entity.Orders">
@@ -32,6 +36,8 @@
             <if test="status != null">status,</if>
             <if test="time != null">time,</if>
             <if test="deliverType != null">deliver_type,</if>
+            <if test="address != null">address,</if>
+            <if test="deliver != null">deliver,</if>
         </trim>
         values
         <trim prefix="(" suffix=" )" suffixOverrides=",">
@@ -42,6 +48,8 @@
             <if test="status != null">#{status},</if>
             <if test="time != null">#{time},</if>
             <if test="deliverType != null">#{deliverType},</if>
+            <if test="address != null">#{address},</if>
+            <if test="deliver != null">#{deliver},</if>
         </trim>
     </insert>
 
@@ -68,6 +76,12 @@
             </if>
             <if test="deliverType != null">
                 deliver_type = #{deliverType},
+            </if>
+            <if test="address != null">
+                address = #{address},
+            </if>
+            <if test="deliver != null">
+                deliver = #{deliver},
             </if>
         </set>
         where id = #{id}

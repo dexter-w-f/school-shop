@@ -1,6 +1,5 @@
 <template>
   <div>
-
     <div class="card" style="margin-bottom: 5px;">
       <el-input v-model="data.orderNo" style="width: 300px; margin-right: 10px" placeholder="请输入订单编号查询"></el-input>
       <el-button type="primary" @click="load">查询</el-button>
@@ -56,10 +55,12 @@
            </template>
          </el-table-column>
          <el-table-column label="下单时间" prop="time"></el-table-column>
-
+          <el-table-column label="地址" prop="address" width="150"></el-table-column>
+        <el-table-column label="配送信息" prop="deliver" width="150"></el-table-column>
         <el-table-column label="订单操作" align="center" width="160">
           <template #default="scope">
-            <el-button type="primary" @click="handleEdit(scope.row.id)">出货</el-button>
+            <el-button v-if="scope.row.deliverType === '自提'&& scope.row.status === '待接单'" type="primary" @click="out(scope.row)">出货</el-button>
+            <el-button v-if="scope.row.deliverType === '外送' && scope.row.status === '待接单'" type="primary" @click="handleDeliver(scope.row)">配送</el-button>
           </template>
         </el-table-column>
         <el-table-column label="删除" align="center" width="100">
@@ -78,8 +79,8 @@
     <el-dialog title="订单信息" width="30%" v-model="data.formVisible" :close-on-click-modal="false" destroy-on-close>
       <el-form ref="formRef" :model="data.form" :rules="data.rules" label-width="80px" style="padding-right: 30px;padding-top: 20px">
 
-        <el-form-item label="名称" prop="name">
-          <el-input v-model="data.form.name" autocomplete="off" />
+        <el-form-item label="配送信息" prop="deliver">
+          <el-input type="textarea" :rows="3" placeholder="请输入配送信息" v-model="data.form.deliver" autocomplete="off" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -108,8 +109,8 @@ const data = reactive({
   tableData: [],
   name: null,
   rules:{
-    name:[
-      {required:true,message:'请输入名称',trigger:'blur'}
+    deliver:[
+      {required:true,message:'请输入配送信息',trigger:'blur'}
     ]
   }
 })
@@ -135,7 +136,7 @@ const handleAdd = () => {
 }
 
 // 编辑
-const handleEdit = (row) => {
+const handleDeliver = (row) => {
   data.form = JSON.parse(JSON.stringify(row))
   data.formVisible = true
 }
@@ -153,8 +154,29 @@ const add = () => {
   })
 }
 
+const out = (row) => {
+  ElMessageBox.confirm('您确认订单已出货吗?', '二次确认', { type: 'warning' }).then(res => {
+    data.form =row
+    data.form.status = '已出货'
+    request.put('/orders/update', data.form).then(res => {
+      if (res.code === '200') {
+        load()
+        ElMessage.success('操作成功')
+        data.formVisible = false
+      } else {
+        ElMessage.error(res.msg)
+      }
+    })
+  }).catch(err => {})
+}
+
 // 编辑保存
 const update = () => {
+  if(data.form.deliverType === '自提'){
+    data.form.satatus = '已出货'
+  }else(data.form.deliverType === '外送'){
+    data.form.status = '已配送'
+  }
   request.put('/orders/update', data.form).then(res => {
     if (res.code === '200') {
       load()

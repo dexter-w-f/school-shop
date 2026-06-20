@@ -23,7 +23,7 @@
         <div>
           <el-input-number style="width: 150px;height: 40px;" :min="1" v-model="data.num"></el-input-number>
           <el-button @click="addCart" style="height: 40px;margin-left: 5px" type="danger">加入购物车</el-button>
-          <el-button style="height: 40px;margin-left: 5px" type="danger" @click="addOrder">立即购买</el-button>
+          <el-button style="height: 40px;margin-left: 5px" type="danger" @click="handleAddOrder">立即购买</el-button>
         </div>
       </div>
     </div>
@@ -42,14 +42,37 @@
       </div>
     </div>
    </div>
+
+    <el-dialog title="下单信息" width="30%" v-model="data.formVisible" :close-on-click-modal="false" destroy-on-close>
+      <el-form ref="formRef" :model="data.form" :rules="data.rules" label-width="100px" style="padding-right: 30px">
+        <el-form-item label="配送类型" prop="type">
+          <el-radio-group v-model="data.form.deliverType">
+            <el-radio value="自提" label="自提">自提</el-radio>
+            <el-radio value="外送" label="外送">外送</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="收货地址" prop="address" v-if="data.form.deliverType === '外送'">
+          <el-input type="textarea" :rows="3" placeholder="请输入收货地址" v-model="data.form.address"  />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="data.formVisible = false">取 消</el-button>
+        <el-button type="primary" @click="addOrder">确 认</el-button>
+      </span>
+      </template>
+    </el-dialog>
+
   </div>
 </template>
 
 <script setup>
-import {reactive} from "vue";
+import {reactive, ref} from "vue";
 import router from "@/router";
 import request from "@/utils/request";
 import {ElMessage} from "element-plus";
+
+const formRef = ref()
 const data = reactive({
   user: JSON.parse(localStorage.getItem('system-user') || '{}'),
   id:router.currentRoute.value.query.id,
@@ -57,20 +80,42 @@ const data = reactive({
   num:1,
   current:'商品详情',
   commentList:[],
-  userCollect: {}
+  userCollect: {},
+  form:{},
+  formVisible: false,
+  rules:{
+    deliverType:[
+      {required: true, message: '请选择配送类型', trigger: 'change'}
+    ],
+    address:[
+      {required: true, message: '请输入收货地址', trigger: 'blur'}
+    ]
+  }
 })
 
+const handleAddOrder = () =>{
+  data.form = {}
+  data.formVisible = true
+}
+
 const addOrder = () => {
-  request.post('/orders/add',{
-    userId: data.user.id,
-    cartList:[{goodsId:data.id,num:data.num}]
-  }).then(res => {
-    if (res.code === '200') {
-      ElMessage.success('下单成功')
-    } else {
-      ElMessage.error(res.msg)
+  formRef.value.validate(valid => {
+    if (valid) {
+      data.form.userId = data.user.id
+      data.form.cartList = [{goodsId: data.id, num:data.num} ]
+      request.post('/orders/add',data.form).then(res => {
+        if (res.code === '200') {
+          ElMessage.success('下单成功')
+          load()
+          data.formVisible = false
+        } else {
+          ElMessage.error(res.msg)
+        }
+      })
     }
   })
+
+
 }
 
 

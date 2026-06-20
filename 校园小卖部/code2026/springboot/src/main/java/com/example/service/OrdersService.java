@@ -58,7 +58,8 @@ public class OrdersService {
            if(goods.getStore()<cart.getNum()){//判断库存是否充足
                throw new CustomException(goods.getName() + "库存不足");
             }
-            goods.setStore(goods.getStore()-cart.getNum());
+            goods.setStore(goods.getStore()-cart.getNum());//减库存
+           goods.setSaleCount(goods.getSaleCount()+cart.getNum());//加销量
             goodsMapper.updateById(goods);//更新库存
             //添加订单详情
             OrderDetail orderDetail = new OrderDetail();
@@ -90,14 +91,36 @@ public class OrdersService {
     /**
      * 删除
      */
+    @Transactional
     public void deleteById(Integer id) {
         ordersMapper.deleteById(id);
+        orderDetailMapper.deleteByOrderId(id);
     }
 
     /**
      * 修改
      */
+    @Transactional
     public void updateById(Orders orders) {
+        if("已取消".equals(orders.getStatus())){
+           Integer userId = orders.getUserId();
+           User user = userMapper.selectById(userId);
+           user.setAccount(user.getAccount().add(orders.getTotal()));
+           userMapper.updateById(user);
+           //
+            OrderDetail orderDetail = new OrderDetail();
+            orderDetail.setOrderId(orders.getId());
+            List<OrderDetail> orderDetailList =orderDetailMapper.selectAll(orderDetail);
+            for (OrderDetail detail : orderDetailList) {
+                Integer goodsId = detail.getOrderId();
+                Goods goods = goodsMapper.selectById(goodsId);
+                if(goods != null){
+                    goods.setStore(goods.getStore() + detail.getNum());
+                    goods.setSaleCount(goods.getSaleCount() - detail.getNum());
+                    goodsMapper.updateById(goods);
+                }
+            }
+        }
         ordersMapper.updateById(orders);
     }
 

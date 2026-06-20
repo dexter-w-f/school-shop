@@ -1,8 +1,10 @@
 <template>
-  <div class="front-container">
+  <div class="front-container" style="width: 90%;">
 
-    <div  style="margin-bottom: 20px;">
+    <div  style="margin-bottom: 10px;">
       <el-input clearable @clear="load" v-model="data.orderNo" style="width: 400px;height: 40px; margin-right: 10px" placeholder="请输入订单编号查询"></el-input>
+      <el-input clearable @clear="load" v-model="data.goodsName" style="width: 400px;height: 40px; margin-right: 10px" placeholder="请输入商品名称查询"></el-input>
+
       <el-button style="height: 40px;" type="primary" @click="load">查 询</el-button>
     </div>
 
@@ -54,11 +56,13 @@
            </template>
          </el-table-column>
          <el-table-column label="下单时间" prop="time"></el-table-column>
-
+        <el-table-column label="地址" prop="address" width="150"></el-table-column>
+        <el-table-column label="配送信息" prop="deliver" width="150"></el-table-column>
         <el-table-column label="订单操作" align="center" width="120">
           <template #default="scope">
-            <el-button v-if="scope.row.status === '待接单'" type="danger"> 取 消</el-button>
-            <el-button v-if="scope.row.status === '待收货'" type="primary">确认收货</el-button>
+            <el-button @click="cancel(scope.row)" v-if="scope.row.status === '待接单'" type="danger"> 取 消</el-button>
+            <el-button v-if="scope.row.status === '已完成'" type="success">评 价</el-button>
+            <el-button @click="done(scope.row)" v-if="scope.row.status === '已出货'|| scope.row.status ==='已配送'" type="primary">确认收货</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -68,21 +72,6 @@
     </div>
 
 
-
-    <el-dialog title="订单信息" width="30%" v-model="data.formVisible" :close-on-click-modal="false" destroy-on-close>
-      <el-form ref="formRef" :model="data.form" :rules="data.rules" label-width="80px" style="padding-right: 30px;padding-top: 20px">
-
-        <el-form-item label="名称" prop="name">
-          <el-input v-model="data.form.name" autocomplete="off" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="data.formVisible = false">取 消</el-button>
-        <el-button type="primary" @click="save">保 存</el-button>
-      </span>
-      </template>
-    </el-dialog>
 
   </div>
 </template>
@@ -101,7 +90,8 @@ const data = reactive({
   formVisible: false,
   form: {},
   tableData: [],
-  name: null,
+  orderNo: null,
+  goodsName:null,
   rules:{
     name:[
       {required:true,message:'请输入名称',trigger:'blur'}
@@ -116,6 +106,7 @@ const load = () => {
       pageNum: data.pageNum,
       pageSize: data.pageSize,
       orderNo: data.orderNo,
+      goodsName:data.goodsName,
       userId: data.user.id
     }
   }).then(res => {
@@ -149,13 +140,28 @@ const add = () => {
   })
 }
 
+const cancel = (row) => {
+  ElMessageBox.confirm('您确认取消订单吗?', '二次确认', { type: 'warning' }).then(res => {
+    data.form =row
+    data.form.status = '已取消'
+    update()
+  }).catch(err => {})
+}
+
+const done = (row) => {
+  ElMessageBox.confirm('您确认已收到订单货物了吗?', '二次确认', { type: 'warning' }).then(res => {
+    data.form =row
+    data.form.status = '已完成'
+    update()
+  }).catch(err => {})
+}
+
 // 编辑保存
 const update = () => {
   request.put('/orders/update', data.form).then(res => {
     if (res.code === '200') {
       load()
       ElMessage.success('操作成功')
-      data.formVisible = false
     } else {
       ElMessage.error(res.msg)
     }
