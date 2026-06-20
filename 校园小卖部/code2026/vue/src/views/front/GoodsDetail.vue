@@ -37,8 +37,15 @@
     <div v-if="data.current==='商品详情'"  style="padding: 10px" v-html="data.goods.content"></div>
     <div v-if="data.current==='商品评论'" style="min-height: 700px">
       <div v-if="data.commentList.length === 0" style="padding: 50px;text-align: center;color: #666">暂无评论...</div>
-      <div v-if="data.commentList.length > 0" style="padding: 20px;text-align: center">
-
+      <div v-if="data.commentList.length > 0" style="padding: 20px;">
+      <div v-for="item in data.commentList" :key="item.id" style="display: flex;grid-gap: 10px;">
+        <img :src="item.userAvatar" style="width: 50px;height: 50px;border-radius: 50%;">
+        <div style="flex: 1">
+          <div>
+            {{item.userName}} <span style="color: #666;font-size: 13px;margin-left: 10px">{{item.time}}</span>
+          </div>
+        </div>
+      </div>
       </div>
     </div>
    </div>
@@ -80,6 +87,9 @@ const data = reactive({
   num:1,
   current:'商品详情',
   commentList:[],
+  pageNum: 1,
+  pageSize: 10,
+  total: 0,
   userCollect: {},
   form:{},
   formVisible: false,
@@ -93,6 +103,19 @@ const data = reactive({
   }
 })
 
+const loadComment = () => {
+  request.get('/comment/selectPage', {
+    params: {
+      pageNum: data.pageNum,
+      pageSize: data.pageSize,
+      goodsId: data.id,
+    }
+  }).then(res => {
+    data.commentList  = res.data?.list
+    data.total = res.data?.total
+  })
+}
+loadComment()
 const handleAddOrder = () =>{
   data.form = {}
   data.formVisible = true

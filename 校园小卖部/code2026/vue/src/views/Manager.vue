@@ -4,6 +4,7 @@
       <div style="flex: 1">
         <div style="padding-left: 20px; display: flex; align-items: center">
           <img src="@/assets/imgs/logo.png" alt="" style="width: 40px">
+          <span style="color: white"><b style="font-size: 25px"> 校园小卖部</b> </span>
         </div>
       </div>
       <div style="width: fit-content; padding-right: 10px; display: flex; align-items: center;">
@@ -45,6 +46,10 @@
             <el-menu-item index="/manager/carousel">
               <el-icon><Document /></el-icon>
               <span>轮播图信息</span>
+            </el-menu-item>
+            <el-menu-item index="/manager/comment">
+              <el-icon><Document /></el-icon>
+              <span>用户评论</span>
             </el-menu-item>
             <el-menu-item index="/manager/collect">
               <el-icon><Document /></el-icon>

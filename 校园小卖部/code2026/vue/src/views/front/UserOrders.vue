@@ -31,6 +31,11 @@
                     <b style="color: red;">{{(scope.row.goodsPrice * scope.row.num).toFixed(2)}} 元</b>
                   </template>
                 </el-table-column>
+                <el-table-column label="操作" width="120">
+                  <template #default="scope">
+                    <el-button @click="handleAddComment(scope.row)" v-if="props.row.status === '已完成'" type="success">评 价</el-button>
+                  </template>
+                </el-table-column>
               </el-table>
             </div>
           </template>
@@ -61,7 +66,7 @@
         <el-table-column label="订单操作" align="center" width="120">
           <template #default="scope">
             <el-button @click="cancel(scope.row)" v-if="scope.row.status === '待接单'" type="danger"> 取 消</el-button>
-            <el-button v-if="scope.row.status === '已完成'" type="success">评 价</el-button>
+
             <el-button @click="done(scope.row)" v-if="scope.row.status === '已出货'|| scope.row.status ==='已配送'" type="primary">确认收货</el-button>
           </template>
         </el-table-column>
@@ -71,6 +76,23 @@
       </div>
     </div>
 
+    <el-dialog title="评价信息" width="30%" v-model="data.formVisible" :close-on-click-modal="false" destroy-on-close>
+      <el-form ref="formRef" :model="data.form" :rules="data.rules" label-width="80px" style="padding-right: 30px;padding-top: 20px">
+        <el-form-item label="评分" prop="score">
+          <el-rate show-score allow-half v-model="data.form.score"></el-rate>
+        </el-form-item>
+        <el-form-item label="内容" prop="content">
+          <el-input type="textarea" :rows="3" v-model="data.form.content" autocomplete="off" placeholder="请输入评论" />
+        </el-form-item>
+
+      </el-form>
+      <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="data.formVisible = false">取 消</el-button>
+        <el-button type="primary" @click="save">保 存</el-button>
+      </span>
+      </template>
+    </el-dialog>
 
 
   </div>
@@ -93,8 +115,11 @@ const data = reactive({
   orderNo: null,
   goodsName:null,
   rules:{
-    name:[
-      {required:true,message:'请输入名称',trigger:'blur'}
+    content:[
+      {required:true,message:'请输入内容',trigger:'blur'}
+    ],
+    score:[
+      {required:true,message:'请选择评分',trigger:'change'}
     ]
   }
 })
@@ -115,36 +140,12 @@ const load = () => {
   })
 }
 load()
-// 新增
-const handleAdd = () => {
-  data.form = {}
-  data.formVisible = true
-}
-
-// 编辑
-const handleEdit = (row) => {
-  data.form = JSON.parse(JSON.stringify(row))
-  data.formVisible = true
-}
-
-// 新增保存
-const add = () => {
-  request.post('/orders/add', data.form).then(res => {
-    if (res.code === '200') {
-      load()
-      ElMessage.success('操作成功')
-      data.formVisible = false
-    } else {
-      ElMessage.error(res.msg)
-    }
-  })
-}
 
 const cancel = (row) => {
   ElMessageBox.confirm('您确认取消订单吗?', '二次确认', { type: 'warning' }).then(res => {
     data.form =row
     data.form.status = '已取消'
-    update()
+    updateOrder()
   }).catch(err => {})
 }
 
@@ -152,12 +153,12 @@ const done = (row) => {
   ElMessageBox.confirm('您确认已收到订单货物了吗?', '二次确认', { type: 'warning' }).then(res => {
     data.form =row
     data.form.status = '已完成'
-    update()
+    updateOrder()
   }).catch(err => {})
 }
 
 // 编辑保存
-const update = () => {
+const updateOrder = () => {
   request.put('/orders/update', data.form).then(res => {
     if (res.code === '200') {
       load()
@@ -168,11 +169,55 @@ const update = () => {
   })
 }
 
+// 新增
+const handleAddComment = (row) => {
+    request.get('/comment/selectAll', {
+      params: {
+        orderId: row.orderId,
+        goodsId: row.goodsId,
+
+      }
+    }).then(res => {
+      data.form = res.data?.length > 0 ? res.data[0] : {
+        orderId: row.orderId,
+        goodsId: row.goodsId,
+        userId: data.user.id,
+      }
+      data.formVisible = true
+    })
+}
+
+
+// 新增保存
+const addComment = () => {
+  request.post('/comment/add', data.form).then(res => {
+    if (res.code === '200') {
+      ElMessage.success('操作成功')
+      data.formVisible = false
+    } else {
+      ElMessage.error(res.msg)
+    }
+  })
+}
+
+// 编辑保存
+const updateComment = () => {
+  request.put('/comment/update', data.form).then(res => {
+    if (res.code === '200') {
+
+      ElMessage.success('操作成功')
+      data.formVisible = false
+    } else {
+      ElMessage.error(res.msg)
+    }
+  })
+}
+
 // 弹窗保存
 const save = () => {
   formRef.value.validate(valid => {
     if (valid) {
-      data.form.id ? update() : add()
+      data.form.id ? updateComment() : addComment()
     }
   })
 }

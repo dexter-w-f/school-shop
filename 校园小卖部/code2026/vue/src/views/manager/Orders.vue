@@ -174,7 +174,7 @@ const out = (row) => {
 const update = () => {
   if(data.form.deliverType === '自提'){
     data.form.satatus = '已出货'
-  }else(data.form.deliverType === '外送'){
+  }else if(data.form.deliverType === '外送'){
     data.form.status = '已配送'
   }
   request.put('/orders/update', data.form).then(res => {
