@@ -23,7 +23,7 @@
         <div>
           <el-input-number style="width: 150px;height: 40px;" :min="1" v-model="data.num"></el-input-number>
           <el-button @click="addCart" style="height: 40px;margin-left: 5px" type="danger">加入购物车</el-button>
-          <el-button style="height: 40px;margin-left: 5px" type="danger">立即购买</el-button>
+          <el-button style="height: 40px;margin-left: 5px" type="danger" @click="addOrder">立即购买</el-button>
         </div>
       </div>
     </div>
@@ -59,6 +59,20 @@ const data = reactive({
   commentList:[],
   userCollect: {}
 })
+
+const addOrder = () => {
+  request.post('/orders/add',{
+    userId: data.user.id,
+    cartList:[{goodsId:data.id,num:data.num}]
+  }).then(res => {
+    if (res.code === '200') {
+      ElMessage.success('下单成功')
+    } else {
+      ElMessage.error(res.msg)
+    }
+  })
+}
+
 
 const addCart = () => {
   request.post('/cart/add',{

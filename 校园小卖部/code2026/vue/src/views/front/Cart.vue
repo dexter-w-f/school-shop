@@ -17,7 +17,7 @@
           </el-table-column>
           <el-table-column  label="商品数量">
             <template #default="scope">
-              <el-input-number @change="calTotal" v-model="scope.row.num" :min="1" style="width: 150px;"></el-input-number>
+              <el-input-number @change="changeNum(scope.row)" v-model="scope.row.num" :min="1" style="width: 150px;"></el-input-number>
             </template>
           </el-table-column>
           <el-table-column label="操作" align="center" width="160">
@@ -72,6 +72,31 @@ const data = reactive({
     ]
   }
 })
+
+const addOrder = () => {
+  if(!data.selectedRows?.length){
+    ElMessage.warning('请选择商品')
+    return
+  }
+  request.post('/orders/add',{
+    userId: data.user.id,
+    cartList: data.selectedRows
+  }).then(res => {
+    if (res.code === '200') {
+      ElMessage.success('下单成功')
+      load()
+    } else {
+      ElMessage.error(res.msg)
+    }
+  })
+}
+
+const changeNum = (row) => {
+  calTotal()
+  data.form = row
+  update()
+
+}
 
 const calTotal = () => {
   data.total = 0
@@ -129,9 +154,6 @@ const add = () => {
 const update = () => {
   request.put('/cart/update', data.form).then(res => {
     if (res.code === '200') {
-      load()
-      ElMessage.success('操作成功')
-      data.formVisible = false
     } else {
       ElMessage.error(res.msg)
     }

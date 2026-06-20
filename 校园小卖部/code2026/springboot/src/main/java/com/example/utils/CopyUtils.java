@@ -21,16 +21,16 @@ public class CopyUtils {
         // 复制源文件前缀
         String sourceName = "Category";
         // 复制后的目标文件前缀
-        String targetName = "Cart";
+        String targetName = "OrderDetail";
 
         // 复制一整套的 controller、Service、Mapper、Mapper.xml
         copyMapperXml(sourceName, targetName);
         copyMapper(sourceName, targetName);
-        copyService(sourceName, targetName);
-        copyController(sourceName, targetName);
+//        copyService(sourceName, targetName);
+//        copyController(sourceName, targetName);
 
         // 复制Vue文件
-        copyVue(sourceName, targetName);
+//        copyVue(sourceName, targetName);
     }
 
     // 复制Mapper.xml
