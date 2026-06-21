@@ -20,7 +20,9 @@ const router = createRouter({
         { path: 'collect', component: () => import('@/views/manager/Collect.vue')},
         { path: 'recharge', component: () => import('@/views/manager/Recharge.vue')},
         { path: 'orders', component: () => import('@/views/manager/Orders.vue')},
-        { path: 'comment', component: () => import('@/views/manager/Comment.vue')}
+        { path: 'comment', component: () => import('@/views/manager/Comment.vue')},
+        { path: 'dataManager', component: () => import('@/views/manager/DataManager.vue')},
+
       ]
     },
       {

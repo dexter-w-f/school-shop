@@ -7,7 +7,7 @@
     <select id="selectAll" resultType="com.example.entity.Orders">
         select orders.*, user.name as userName from `orders`
         left join user on orders.user_id = user.id
-        left join order_detail on order_detail.order_id = order.id
+        left join order_detail on order_detail.order_id = orders.id
         <where>
             <if test="orderNo != null"> and orders.order_no like concat('%', #{orderNo}, '%')</if>
             <if test="goodsName != null">and order_detail.goods_name like concat('%',#{goodsName},'%')</if>

@@ -13,6 +13,7 @@ import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -77,5 +78,8 @@ public class UserService {
         userMapper.updateById(dbUser );
     }
 
+    public List<User> selectAll(String  name) {
+        return userMapper.selectAll(name);
+    }
 }
 

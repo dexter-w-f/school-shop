@@ -38,14 +38,22 @@
     <div v-if="data.current==='商品评论'" style="min-height: 700px">
       <div v-if="data.commentList.length === 0" style="padding: 50px;text-align: center;color: #666">暂无评论...</div>
       <div v-if="data.commentList.length > 0" style="padding: 20px;">
-      <div v-for="item in data.commentList" :key="item.id" style="display: flex;grid-gap: 10px;">
+      <div v-for="(item,index) in data.commentList" :key="item.id" style="display: flex;grid-gap: 10px;padding: 10px 0;
+      border-bottom: 1px solid #ddd" :style="{'borderWidth' :index === data.commentList.length - 1 ? 'none' : '1px solid #ddd'}">
         <img :src="item.userAvatar" style="width: 50px;height: 50px;border-radius: 50%;">
         <div style="flex: 1">
-          <div>
-            {{item.userName}} <span style="color: #666;font-size: 13px;margin-left: 10px">{{item.time}}</span>
+          <div><span> {{item.userName}} </span>
+            <span style="color: #666;font-size: 13px;margin-left: 10px;">{{item.time}}</span>
           </div>
+          <div style="margin-bottom: 5px">
+            <el-rate v-model="item.score" allow-half show-score disabled></el-rate>
+          </div>
+          <div>{{item.content}}<</div>
         </div>
       </div>
+        <div style="margin-top: 20px" >
+          <el-pagination @current-change="loadComment"  layout="total, prev, pager, next" v-model:page-size="data.pageSize" v-model:current-page="data.pageNum" :total="data.total"/>
+        </div>
       </div>
     </div>
    </div>

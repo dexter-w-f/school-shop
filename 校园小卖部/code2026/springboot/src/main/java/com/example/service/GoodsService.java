@@ -51,7 +51,7 @@ public class GoodsService {
      */
     public void updateById(Goods goods) {
         goodsMapper.updateById(goods);
-        if(goods.getStatus().equals("下架")){
+        if("下架".equals(goods.getStatus())){
             cartMapper.deleteByGoodsId(goods.getId());
         }
     }
