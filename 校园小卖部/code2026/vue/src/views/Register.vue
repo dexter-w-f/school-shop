@@ -40,14 +40,25 @@
       ],
       password: [
         { required: true, message: '请输入密码', trigger: 'blur' },
+        { min: 6, message: '密码长度至少6位', trigger: 'blur' }
       ],
       newPassword: [
         { required: true, message: '请确认密码', trigger: 'blur' },
+        { validator: validateConfirmPassword, trigger: 'blur' }
       ]
     }
   })
 
   const formRef = ref()
+
+  // 验证两次密码是否一致
+  const validateConfirmPassword = (rule, value, callback) => {
+    if (value !== data.form.password) {
+      callback(new Error('两次输入的密码不一致'))
+    } else {
+      callback()
+    }
+  }
 
   // 点击登录按钮的时候会触发这个方法
   const register = () => {

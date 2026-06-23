@@ -53,6 +53,12 @@
             </exclusions>
         </dependency>
 
+        <!-- Spring Security 用于BCrypt密码加密 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

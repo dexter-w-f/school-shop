@@ -7,6 +7,7 @@ import com.example.entity.Admin;
 import com.example.entity.User;
 import com.example.exception.CustomException;
 import com.example.mapper.UserMapper;
+import com.example.utils.PasswordUtils;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import jakarta.annotation.Resource;
@@ -37,8 +38,10 @@ public class UserService {
             throw new CustomException("新增失败，账号重复");
         }
         if(StrUtil.isBlank(user.getPassword())){
-            user.setPassword("123");
+            user.setPassword("123456");
         }
+        // 对密码进行加密
+        user.setPassword(PasswordUtils.encode(user.getPassword()));
         if(StrUtil.isBlank(user.getName())){
             user.setName(user.getUsername());
         }
@@ -56,7 +59,8 @@ public class UserService {
         if (ObjectUtil.isNull(dbUser)) {
             throw new CustomException("用户不存在");
         }
-        if (!account.getPassword().equals(dbUser.getPassword())) {
+        // 使用BCrypt验证密码
+        if (!PasswordUtils.matches(account.getPassword(), dbUser.getPassword())) {
             throw new CustomException("账号或密码错误");
         }
         return dbUser;
@@ -71,11 +75,13 @@ public class UserService {
         if (ObjectUtil.isNull(dbUser )) {
             throw new CustomException("用户不存在");
         }
-        if (!account.getPassword().equals(dbUser .getPassword())) {
+        // 验证原密码
+        if (!PasswordUtils.matches(account.getPassword(), dbUser.getPassword())) {
             throw new CustomException("原密码错误");
         }
-        dbUser .setPassword(account.getNewPassword());
-        userMapper.updateById(dbUser );
+        // 对新密码进行加密
+        dbUser.setPassword(PasswordUtils.encode(account.getNewPassword()));
+        userMapper.updateById(dbUser);
     }
 
     public List<User> selectAll(String  name) {

@@ -5,6 +5,7 @@ import com.example.entity.Account;
 import com.example.entity.Admin;
 import com.example.exception.CustomException;
 import com.example.mapper.AdminMapper;
+import com.example.utils.PasswordUtils;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import jakarta.annotation.Resource;
@@ -32,6 +33,8 @@ public class AdminService {
         if (ObjectUtil.isEmpty(admin.getPassword())) {
             admin.setPassword("admin");
         }
+        // 对密码进行加密
+        admin.setPassword(PasswordUtils.encode(admin.getPassword()));
         if (ObjectUtil.isEmpty(admin.getName())) {
             admin.setName(admin.getUsername());
         }
@@ -84,7 +87,8 @@ public class AdminService {
         if (ObjectUtil.isNull(dbAdmin)) {
             throw new CustomException("用户不存在");
         }
-        if (!account.getPassword().equals(dbAdmin.getPassword())) {
+        // 使用BCrypt验证密码
+        if (!PasswordUtils.matches(account.getPassword(), dbAdmin.getPassword())) {
             throw new CustomException("账号或密码错误");
         }
         return dbAdmin;
@@ -98,10 +102,12 @@ public class AdminService {
         if (ObjectUtil.isNull(dbAdmin)) {
             throw new CustomException("用户不存在");
         }
-        if (!account.getPassword().equals(dbAdmin.getPassword())) {
+        // 验证原密码
+        if (!PasswordUtils.matches(account.getPassword(), dbAdmin.getPassword())) {
             throw new CustomException("原密码错误");
         }
-        dbAdmin.setPassword(account.getNewPassword());
+        // 对新密码进行加密
+        dbAdmin.setPassword(PasswordUtils.encode(account.getNewPassword()));
         adminMapper.updateById(dbAdmin);
     }
 
