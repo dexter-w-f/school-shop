@@ -15,9 +15,12 @@
         "/logout",
         "/files/download/",
        "/goods/selectAll",
-       "/comment/selectPage",
-       "/comment/selectAll",
-       "/carousel/selectAll",
+        "/comment/selectPage",
+        "/comment/selectAll",
+        "/doc.html",
+        "/swagger-ui",
+        "/v3/api-docs",
+        "/carousel/selectAll",
          "/category/selectAll"
     };
  

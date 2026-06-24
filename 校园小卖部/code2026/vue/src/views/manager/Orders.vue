@@ -173,7 +173,7 @@ const out = (row) => {
 // 编辑保存
 const update = () => {
   if(data.form.deliverType === '自提'){
-    data.form.satatus = '已出货'
+    data.form.status = '已出货'
   }else if(data.form.deliverType === '外送'){
     data.form.status = '已配送'
   }

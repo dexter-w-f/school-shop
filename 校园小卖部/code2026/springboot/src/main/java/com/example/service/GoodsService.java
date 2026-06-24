@@ -10,6 +10,8 @@ import com.example.mapper.GoodsMapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import jakarta.annotation.Resource;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,7 @@ public class GoodsService {
     /**
      * 新增
      */
+    @CacheEvict(value = "goods", allEntries = true)
     public void add(Goods goods) {
         goods.setViews(0);
         goods.setSaleCount(0);
@@ -40,6 +43,7 @@ public class GoodsService {
     /**
      * 删除
      */
+    @CacheEvict(value = "goods", allEntries = true)
     @Transactional
     public void deleteById(Integer id) {
         goodsMapper.deleteById(id);
@@ -49,6 +53,7 @@ public class GoodsService {
     /**
      * 修改
      */
+    @CacheEvict(value = "goods", allEntries = true)
     public void updateById(Goods goods) {
         goodsMapper.updateById(goods);
         if("下架".equals(goods.getStatus())){
@@ -59,6 +64,7 @@ public class GoodsService {
     /**
      * 根据ID查询
      */
+    @Cacheable(value = "goods", key = "#id")
     public Goods selectById(Integer id) {
         return goodsMapper.selectById(id);
     }

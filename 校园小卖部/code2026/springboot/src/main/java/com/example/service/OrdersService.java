@@ -116,10 +116,10 @@ public class OrdersService {
      */
    @Transactional
    public void updateById(Orders orders) {
-        Orders current = ordersMapper.selectById(orders.getId());
-        if("已取消".equals(current.getStatus())) {
-            return;
-        }
+       Orders current = ordersMapper.selectById(orders.getId());
+        if(current == null || "已取消".equals(current.getStatus())) {
+           return;
+       }
         if("已取消".equals(orders.getStatus())){
            Integer userId = orders.getUserId();
            User user = userMapper.selectById(userId);

@@ -87,4 +87,11 @@
         where id = #{id}
     </update>
 
+    <select id="selectTimeoutOrders" resultType="com.example.entity.Orders">
+        select * from `orders`
+        where status = #{status}
+        and time &lt; #{deadline}
+        order by id asc
+    </select>
+
 </mapper>

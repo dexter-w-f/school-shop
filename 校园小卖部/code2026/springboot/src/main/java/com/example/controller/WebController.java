@@ -5,9 +5,11 @@ import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import com.example.common.Result;
 import com.example.entity.*;
+import com.example.exception.CustomException;
 import com.example.mapper.OrderDetailMapper;
 import com.example.service.*;
 import com.example.utils.TokenUtils;
+import com.example.utils.LoginAttemptLimiter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +34,9 @@ public class WebController {
     @Resource
     OrderDetailMapper orderDetailMapper;
 
+    @Resource
+    private LoginAttemptLimiter loginAttemptLimiter;
+
     /**
      * 默认请求接口
      */
@@ -45,6 +50,10 @@ public class WebController {
      */
     @PostMapping("/login")
     public Result login(@RequestBody Account account) {
+        if (loginAttemptLimiter.isLocked(account.getUsername())) {
+            return Result.error("登录失败次数过多，请15分钟后重试");
+        }
+        try {
         Account ac = null;
         if ("管理员".equals(account.getRole())) {
             ac = adminService.login(account);
@@ -53,11 +62,17 @@ public class WebController {
             ac = userService.login(account);
         }
         if (ac == null) {
+            loginAttemptLimiter.recordFailure(account.getUsername());
             return Result.error("用户不存在");
         }
+        loginAttemptLimiter.reset(account.getUsername());
         String token = TokenUtils.generateToken(ac.getId());
         ac.setToken(token);
         return Result.success(ac);
+        } catch (CustomException e) {
+            loginAttemptLimiter.recordFailure(account.getUsername());
+            return Result.error(e.getMsg());
+        }
     }
 
     /**

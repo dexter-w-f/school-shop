@@ -8,6 +8,8 @@ import com.example.mapper.CarouselMapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import jakarta.annotation.Resource;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,6 +26,7 @@ public class CarouselService {
     /**
      * 新增
      */
+    @CacheEvict(value = "carousel", allEntries = true)
     public void add(Carousel carousel) {
         carouselMapper.insert(carousel);
     }
@@ -31,6 +34,7 @@ public class CarouselService {
     /**
      * 删除
      */
+    @CacheEvict(value = "carousel", allEntries = true)
     public void deleteById(Integer id) {
         carouselMapper.deleteById(id);
     }
@@ -38,6 +42,7 @@ public class CarouselService {
     /**
      * 修改
      */
+    @CacheEvict(value = "carousel", allEntries = true)
     public void updateById(Carousel carousel) {
         carouselMapper.updateById(carousel);
     }
@@ -52,6 +57,7 @@ public class CarouselService {
     /**
      * 查询所有
      */
+    @Cacheable(value = "carousel", key = "'all'")
     public List<Carousel> selectAll(Carousel carousel) {
         return carouselMapper.selectAll(carousel);
     }

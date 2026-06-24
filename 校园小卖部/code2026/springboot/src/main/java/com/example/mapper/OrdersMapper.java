@@ -2,6 +2,7 @@ package com.example.mapper;
 
 import com.example.entity.Orders;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -35,5 +36,7 @@ public interface OrdersMapper {
     */
     List<Orders> selectAll(Orders orders);
 
+
+    List<Orders> selectTimeoutOrders(@Param("status") String status, @Param("deadline") String deadline);
 
 }

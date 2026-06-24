@@ -8,6 +8,8 @@ import com.example.mapper.CategoryMapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import jakarta.annotation.Resource;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,6 +26,7 @@ public class CategoryService {
     /**
      * 新增
      */
+    @CacheEvict(value = "category", allEntries = true)
     public void add(Category category) {
         categoryMapper.insert(category);
     }
@@ -31,6 +34,7 @@ public class CategoryService {
     /**
      * 删除
      */
+    @CacheEvict(value = "category", allEntries = true)
     public void deleteById(Integer id) {
         categoryMapper.deleteById(id);
     }
@@ -38,6 +42,7 @@ public class CategoryService {
     /**
      * 修改
      */
+    @CacheEvict(value = "category", allEntries = true)
     public void updateById(Category category) {
         categoryMapper.updateById(category);
     }
@@ -52,6 +57,7 @@ public class CategoryService {
     /**
      * 查询所有
      */
+    @Cacheable(value = "category", key = "'all'")
     public List<Category> selectAll(Category category) {
         return categoryMapper.selectAll(category);
     }
