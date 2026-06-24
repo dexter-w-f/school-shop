@@ -22,8 +22,8 @@
         <div  style="margin-bottom: 20px;padding: 10px;background-color: lavenderblush;border-radius: 5px;line-height: 25px;text-align: justify">{{data.goods.description}}</div>
         <div>
           <el-input-number style="width: 150px;height: 40px;" :min="1" v-model="data.num"></el-input-number>
-          <el-button @click="addCart" style="height: 40px;margin-left: 5px" type="danger">加入购物车</el-button>
-          <el-button style="height: 40px;margin-left: 5px" type="danger" @click="handleAddOrder">立即购买</el-button>
+          <el-button @click="addCart" style="height: 40px;margin-left: 5px" type="danger" :loading="data.cartLoading">加入购物车</el-button>
+          <el-button style="height: 40px;margin-left: 5px" type="danger" @click="handleAddOrder" :loading="data.orderLoading">立即购买</el-button>
         </div>
       </div>
     </div>
@@ -73,7 +73,7 @@
       <template #footer>
       <span class="dialog-footer">
         <el-button @click="data.formVisible = false">取 消</el-button>
-        <el-button type="primary" @click="addOrder">确 认</el-button>
+        <el-button type="primary" @click="addOrder" :loading="data.orderLoading">确 认</el-button>
       </span>
       </template>
     </el-dialog>
@@ -100,6 +100,8 @@ const data = reactive({
   total: 0,
   userCollect: {},
   form:{},
+  orderLoading: false,
+  cartLoading: false,
   formVisible: false,
   rules:{
     deliverType:[
@@ -120,6 +122,7 @@ const loadComment = () => {
     }
   }).then(res => {
     data.commentList  = res.data?.list
+    data.commentList = data.commentList ?? []
     data.total = res.data?.total
   })
 }
@@ -130,6 +133,8 @@ const handleAddOrder = () =>{
 }
 
 const addOrder = () => {
+  if (data.orderLoading) return;
+  data.orderLoading = true;
   formRef.value.validate(valid => {
     if (valid) {
       data.form.userId = data.user.id
@@ -142,15 +147,18 @@ const addOrder = () => {
         } else {
           ElMessage.error(res.msg)
         }
+        data.orderLoading = false
       })
     }
+    data.orderLoading = false
   })
 
 
 }
 
-
 const addCart = () => {
+  if (data.cartLoading) return;
+  data.cartLoading = true;
   request.post('/cart/add',{
     goodsId:data.id,
     userId: data.user.id,
@@ -161,6 +169,7 @@ const addCart = () => {
     } else {
       ElMessage.error(res.msg)
     }
+    data.cartLoading = false
   })
 }
 

@@ -25,9 +25,16 @@
         values (#{id}, #{username}, #{password}, #{name}, #{avatar}, #{role})
     </insert>
 
-    <update id="updateById" parameterType="com.example.entity.Admin">
-        update `admin` set username = #{username}, password = #{password}, name = #{name}, avatar = #{avatar}, role = #{role}
-        where id = #{id} 
-    </update>
+   <update id="updateById" parameterType="com.example.entity.Admin">
+        update `admin`
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="role != null">role = #{role},</if>
+        </set>
+       where id = #{id} 
+   </update>
 
 </mapper>

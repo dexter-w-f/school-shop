@@ -7,6 +7,8 @@ import com.example.common.Result;
 import com.example.entity.*;
 import com.example.mapper.OrderDetailMapper;
 import com.example.service.*;
+import com.example.utils.TokenUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,6 +55,8 @@ public class WebController {
         if (ac == null) {
             return Result.error("用户不存在");
         }
+        String token = TokenUtils.generateToken(ac.getId());
+        ac.setToken(token);
         return Result.success(ac);
     }
 
@@ -79,6 +83,7 @@ public class WebController {
         if ("普通用户".equals(account.getRole())) {
             userService.updatePassword(account);
         }
+        TokenUtils.removeByUserId(account.getId());
         return Result.success();
     }
     @GetMapping("/count")
@@ -129,9 +134,12 @@ public class WebController {
                 Integer orderId = orderDetail.getOrderId();
                 Orders orders = ordersService.selectById(orderId);
                 if(!orders.getStatus().equals("已取消")){
-                    Integer goodsId = orderDetail.getGoodsId();
-                   Goods goods =  goodsService.selectById(goodsId);
-                   if(goods.getCategoryId().equals(category.getId())){
+                   Integer goodsId = orderDetail.getGoodsId();
+                  Goods goods =  goodsService.selectById(goodsId);
+                   if(goods == null){
+                       continue;
+                   }
+                  if(goods.getCategoryId().equals(category.getId())){
                        total=total.add(orders.getTotal());
                    }
                 }
@@ -144,6 +152,19 @@ public class WebController {
 
         }
 
-        return Result.success(list);
+       return Result.success(list);
+   }
+
+    /**
+     * 退出登录
+     */
+    @PostMapping("/logout")
+    public Result logout(HttpServletRequest request) {
+        String token = request.getHeader("token");
+        if (token != null) {
+            TokenUtils.removeToken(token);
+        }
+        return Result.success();
     }
+
 }

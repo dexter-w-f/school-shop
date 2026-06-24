@@ -103,4 +103,8 @@
         </set>
         where id = #{id}
     </update>
+    <update id="updateStoreDeduct">
+        update `goods` set store = store - #{num}, sale_count = sale_count + #{num}
+        where id = #{id} and store >= #{num}
+    </update>
 </mapper>

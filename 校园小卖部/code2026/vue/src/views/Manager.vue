@@ -86,11 +86,11 @@
             <el-icon><Lock /></el-icon>
             <span>修改密码</span>
           </el-menu-item>
-          <el-menu-item @click="logout">
-            <el-icon><SwitchButton /></el-icon>
-            <span>退出系统</span>
-          </el-menu-item>
         </el-menu>
+        <div style="padding-left: 20px; display: flex; align-items: center; height: 40px; cursor: pointer; border-top: 1px solid #ddd;" @click="logout">
+          <el-icon><SwitchButton /></el-icon>
+          <span style="margin-left: 5px;">退出系统</span>
+        </div>
       </div>
       <div style="flex: 1; width: 0; background-color: #f8f8ff; padding: 10px">
         <router-view @updateUser="updateUser" />
@@ -103,6 +103,7 @@
 <script setup>
 import { reactive } from "vue";
 import router from "@/router";
+import request from "@/utils/request";
 import {ElMessage} from "element-plus";
 
 const data = reactive({
@@ -119,9 +120,14 @@ const updateUser = () => {
 }
 
 const logout = () => {
-  router.push('/login')
-  ElMessage.success('退出成功')
-  localStorage.removeItem('system-user')
+  request.post('/logout').then(() => {
+    localStorage.removeItem('system-user')
+    router.push('/login')
+    ElMessage.success('退出成功')
+  }).catch(() => {
+    localStorage.removeItem('system-user')
+    router.push('/login')
+  })
 }
 </script>
 

@@ -20,8 +20,8 @@ public class UserController {
    * @param pageSize
    * @param name
    */
-    @GetMapping("/selectPag")
-    public Result selectPag(@RequestParam(defaultValue = "1") Integer pageNum,
+    @GetMapping("/selectPage")
+   public Result selectPag(@RequestParam(defaultValue = "1") Integer pageNum,
                             @RequestParam(defaultValue = "10") Integer pageSize,
                             @RequestParam(required = false) String name)
     {

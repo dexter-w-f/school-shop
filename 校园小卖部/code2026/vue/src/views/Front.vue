@@ -28,12 +28,12 @@
          </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click.native="router.push('/front/userCollect')">我的收藏</el-dropdown-item>
-              <el-dropdown-item @click.native="router.push('/front/userComment')">我的评价</el-dropdown-item>
-              <el-dropdown-item @click.native="router.push('/front/person')">个人信息</el-dropdown-item>
-              <el-dropdown-item @click.native="router.push('/front/password')">修改密码</el-dropdown-item>
-              <el-dropdown-item @click.native="router.push('/front/userRecharge')">我的充值</el-dropdown-item>
-              <el-dropdown-item @click.native="logout">退出登录</el-dropdown-item>
+              <el-dropdown-item @click="router.push('/front/userCollect')">我的收藏</el-dropdown-item>
+              <el-dropdown-item @click="router.push('/front/userComment')">我的评价</el-dropdown-item>
+              <el-dropdown-item @click="router.push('/front/person')">个人信息</el-dropdown-item>
+              <el-dropdown-item @click="router.push('/front/password')">修改密码</el-dropdown-item>
+              <el-dropdown-item @click="router.push('/front/userRecharge')">我的充值</el-dropdown-item>
+              <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -51,6 +51,7 @@
 <script setup>
 import { reactive } from "vue";
 import router from "@/router";
+import request from "@/utils/request";
 import {ElMessage} from "element-plus";
 
 const data = reactive({
@@ -70,9 +71,14 @@ if(!data.user?.id){
   router.push('/login')
 }
 const logout = () => {
-  localStorage.removeItem('system-user')
-  router.push('/login')
-  ElMessage.success('退出成功')
+  request.post('/logout').then(() => {
+    localStorage.removeItem('system-user')
+    router.push('/login')
+    ElMessage.success('退出成功')
+  }).catch(() => {
+    localStorage.removeItem('system-user')
+    router.push('/login')
+  })
 }
 
 const updateUser = () => {

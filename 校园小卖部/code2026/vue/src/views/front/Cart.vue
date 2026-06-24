@@ -50,7 +50,7 @@
       <template #footer>
       <span class="dialog-footer">
         <el-button @click="data.formVisible = false">取 消</el-button>
-        <el-button type="primary" @click="addOrder">确 认</el-button>
+        <el-button type="primary" @click="addOrder" :loading="data.orderLoading">确 认</el-button>
       </span>
       </template>
     </el-dialog>
@@ -69,6 +69,7 @@ const data = reactive({
   total: 0,
   formVisible: false,
   form: {},
+  orderLoading: false,
   tableData: [],
   selectedRows: [],
   rules:{
@@ -88,8 +89,11 @@ const handleAddOrder = () =>{
 
 
 const addOrder = () => {
+  if (data.orderLoading) return;
+  data.orderLoading = true;
   if(!data.selectedRows?.length){
     ElMessage.warning('请选择商品')
+    data.orderLoading = false;
     return
   }
   data.form.userId = data.user.id
@@ -102,6 +106,8 @@ const addOrder = () => {
     } else {
       ElMessage.error(res.msg)
     }
+  }).finally(() => {
+    data.orderLoading = false
   })
 }
 

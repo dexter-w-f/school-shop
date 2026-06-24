@@ -49,19 +49,39 @@ public class OrdersService {
         ordersMapper.insert(orders);
         Integer orderId = orders.getId();
 
-        List<Cart> cartList = orders.getCartList();
-        BigDecimal totalPrice =  BigDecimal.ZERO;
-        User user = userMapper.selectById(orders.getUserId());
-        for (Cart cart : cartList) {
-           Integer goodsId = cart.getGoodsId();
-           Goods goods = goodsMapper.selectById(goodsId);
-           if(goods.getStore()<cart.getNum()){//判断库存是否充足
+       List<Cart> cartList = orders.getCartList();
+       BigDecimal totalPrice = BigDecimal.ZERO;
+       User user = userMapper.selectById(orders.getUserId());
+       if (user == null) {
+           throw new CustomException("用户不存在");
+       }
+
+       // 先计算总价并校验库存
+       for (Cart cart : cartList) {
+          Integer goodsId = cart.getGoodsId();
+          Goods goods = goodsMapper.selectById(goodsId);
+           if(goods == null){
+               throw new CustomException("商品不存在");
+            }
+           if (goods.getStore() < cart.getNum()) {
                throw new CustomException(goods.getName() + "库存不足");
             }
-            goods.setStore(goods.getStore()-cart.getNum());//减库存
-           goods.setSaleCount(goods.getSaleCount()+cart.getNum());//加销量
-            goodsMapper.updateById(goods);//更新库存
-            //添加订单详情
+            totalPrice = totalPrice.add(goods.getPrice().multiply(BigDecimal.valueOf(cart.getNum())));
+        }
+
+        // 余额检查在扣库存之前
+        if(user.getAccount().compareTo(totalPrice) < 0){
+            throw new CustomException("余额不足");
+        }
+
+        // 执行实际扣库存、创建订单详情等操作
+        for (Cart cart : cartList) {
+            Integer goodsId = cart.getGoodsId();
+            int affected = goodsMapper.updateStoreDeduct(goodsId, cart.getNum());
+            if (affected == 0) {
+                throw new CustomException("商品已售罄");
+            }
+            Goods goods = goodsMapper.selectById(goodsId);
             OrderDetail orderDetail = new OrderDetail();
             orderDetail.setNum(cart.getNum());
             orderDetail.setGoodsId(goodsId);
@@ -74,17 +94,11 @@ public class OrdersService {
             if (cart.getId()!= null ) {
                 cartMapper.deleteById(cart.getId());
             }
-
-            //计算总价
-            totalPrice  =  totalPrice.add(goods.getPrice().multiply(BigDecimal.valueOf(cart.getNum())));
-           }
-        if(user.getAccount().compareTo(totalPrice)<0){//判断余额是否充足
-            throw new CustomException("余额不足");
         }
         user.setAccount(user.getAccount().subtract(totalPrice));
-        userMapper.updateById(user);//更新用户余额
-        orders.setTotal(totalPrice);
-        ordersMapper.updateById(orders);//更新订单
+       userMapper.updateById(user);//更新用户余额
+       orders.setTotal(totalPrice);
+       ordersMapper.updateById(orders);//更新订单
 
     }
 
@@ -100,8 +114,12 @@ public class OrdersService {
     /**
      * 修改
      */
-    @Transactional
-    public void updateById(Orders orders) {
+   @Transactional
+   public void updateById(Orders orders) {
+        Orders current = ordersMapper.selectById(orders.getId());
+        if("已取消".equals(current.getStatus())) {
+            return;
+        }
         if("已取消".equals(orders.getStatus())){
            Integer userId = orders.getUserId();
            User user = userMapper.selectById(userId);
@@ -111,9 +129,9 @@ public class OrdersService {
             OrderDetail orderDetail = new OrderDetail();
             orderDetail.setOrderId(orders.getId());
             List<OrderDetail> orderDetailList =orderDetailMapper.selectAll(orderDetail);
-            for (OrderDetail detail : orderDetailList) {
-                Integer goodsId = detail.getOrderId();
-                Goods goods = goodsMapper.selectById(goodsId);
+           for (OrderDetail detail : orderDetailList) {
+                Integer goodsId = detail.getGoodsId();
+               Goods goods = goodsMapper.selectById(goodsId);
                 if(goods != null){
                     goods.setStore(goods.getStore() + detail.getNum());
                     goods.setSaleCount(goods.getSaleCount() - detail.getNum());

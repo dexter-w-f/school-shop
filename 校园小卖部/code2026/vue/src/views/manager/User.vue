@@ -94,7 +94,7 @@ const data = reactive({
 
 //分页查询数据
 const load = () => {
-  request.get('/user/selectPag',{
+  request.get('/user/selectPage',{
     params:{
       pageNum:data.pageNum,
       pageSize:data.pageSize,

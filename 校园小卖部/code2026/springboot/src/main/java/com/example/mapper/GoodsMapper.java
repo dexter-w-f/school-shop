@@ -2,6 +2,7 @@ package com.example.mapper;
 
 import com.example.entity.Goods;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -35,5 +36,7 @@ public interface GoodsMapper {
     */
     List<Goods> selectAll(Goods goods);
 
+
+    int updateStoreDeduct(@Param("id") Integer id, @Param("num") Integer num);
 
 }

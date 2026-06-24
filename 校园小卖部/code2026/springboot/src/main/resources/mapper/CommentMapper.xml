@@ -5,7 +5,7 @@
 <mapper namespace="com.example.mapper.CommentMapper">
 
     <select id="selectAll" resultType="com.example.entity.Comment">
-        select `comment`.*, oreders.order_no as orderNo,user.avatar as userAvatar , goods.img as goodsImg, goods.name as goodsName, user.name as userName from `comment`
+        select `comment`.*, orders.order_no as orderNo,user.avatar as userAvatar , goods.img as goodsImg, goods.name as goodsName, user.name as userName from `comment`
         left join user on `comment`.user_id = user.id
          left join orders on `comment`.order_id = orders.id
          left join goods on `comment`.goods_id = goods.id

@@ -14,12 +14,16 @@
           <template #default="props">
             <div style="padding: 10px;">
               <el-table :data="props.row.orderDetailList" border >
-                <el-table-column label="商品图片" prop="goodsImg" width="100px">
+              <el-table-column label="商品图片" prop="goodsImg" width="100px">
                   <template #default="scope">
-                    <img :src="scope.row.goodsImg" style="width: 50px;height: 50px">
+                    <img :src="scope.row.goodsImg" style="width: 50px;height: 50px; cursor: pointer;" @click="router.push('/front/goodsDetail?id=' + scope.row.goodsId)">
                   </template>
                 </el-table-column>
-                <el-table-column label="商品名称" prop="goodsName" show-overflow-tooltip></el-table-column>
+                <el-table-column label="商品名称" show-overflow-tooltip>
+                  <template #default="scope">
+                    <span style="cursor: pointer; color: #409eff;" @click="router.push('/front/goodsDetail?id=' + scope.row.goodsId)">{{ scope.row.goodsName }}</span>
+                  </template>
+                </el-table-column>
                 <el-table-column label="商品单价" prop="goodsPrice" width="100px"></el-table-column>
                 <el-table-column label="数量" prop="num">
                   <template #default="scope">
@@ -100,8 +104,10 @@
 
 <script setup>
 import request from "@/utils/request";
+import {useRouter} from "vue-router";
 import {reactive,ref} from "vue";
 import {ElMessageBox, ElMessage} from "element-plus";
+const router = useRouter();
 
 const formRef = ref()
 const data = reactive({

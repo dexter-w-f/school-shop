@@ -35,6 +35,7 @@ CREATE TABLE `admin`  (
 -- ----------------------------
 -- Records of admin
 -- ----------------------------
-INSERT INTO `admin` VALUES (1, 'admin', 'admin', '管理员', 'http://localhost:9090/files/download/avatar.png', 'ADMIN');
+INSERT INTO `admin` VALUES (1, 'admin', '$2a$10$rS5E7Eh5rP5E7Eh5rP5E7Oo8uLOickgx2ZMRZoMyeIjZAgcfl7p92', '管理员', 'http://localhost:9090/files/download/avatar.png', '管理员');
+-- 注意：密码为 BCrypt 加密格式，明文为 'admin'
 
 SET FOREIGN_KEY_CHECKS = 1;

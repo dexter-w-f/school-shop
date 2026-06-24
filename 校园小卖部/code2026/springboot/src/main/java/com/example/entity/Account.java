@@ -15,8 +15,19 @@ public class Account {
     private String role;
     /** 新密码 */
     private String newPassword;
-    /** 头像 */
-    private String avatar;
+   /** 头像 */
+   private String avatar;
+    /** token */
+    private String token;
+ 
+    public String getToken() {
+        return token;
+    }
+ 
+    public void setToken(String token) {
+        this.token = token;
+    }
+ 
 
 
     public Integer getId() {

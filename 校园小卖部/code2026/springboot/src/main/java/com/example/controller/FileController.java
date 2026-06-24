@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,6 +27,14 @@ public class FileController {
     // 表示本地磁盘文件的存储路径
     private static final String filePath = System.getProperty("user.dir") + "/files/";
 
+    // 允许上传的文件类型
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
+        "jpg", "jpeg", "png", "gif", "bmp", "webp", "svg",
+        "mp4", "avi", "mov", "wmv",
+        "doc", "docx", "xls", "xlsx", "ppt", "pptx", "pdf",
+        "txt"
+    );
+
     @Value("${fileBaseUrl}")
     private String fileBaseUrl;
 
@@ -37,8 +46,19 @@ public class FileController {
      */
     @PostMapping("/upload")
     public Result upload(MultipartFile file) {
+        // 校验文件类型
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isEmpty()) {
+            return Result.error("文件名为空");
+        }
+        String ext = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+        if (!ALLOWED_EXTENSIONS.contains(ext)) {
+            return Result.error("不支持的文件类型");
+        }
+        // 清理文件名，防止路径遍历
+        String safeName = originalFilename.replaceAll("[^a-zA-Z0-9._\\-]", "_");
         // 定义文件的唯一标识
-        String fileName = System.currentTimeMillis() + "-" + file.getOriginalFilename();
+        String fileName = System.currentTimeMillis() + "-" + safeName;
         // 拼接完整的文件存储路径
         String realFilePath = filePath + fileName;
         try {
@@ -82,10 +102,24 @@ public class FileController {
      */
     @PostMapping("/wang/upload")
     public Map<String, Object> wangEditorUpload(MultipartFile  file){
-        String flag = System.currentTimeMillis() + "" ;
-        String fileName =file.getOriginalFilename();
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isEmpty()) {
+            Map<String, Object> errMap = new HashMap<>();
+            errMap.put("errno", 1);
+            errMap.put("message", "文件名为空");
+            return errMap;
+        }
+        String ext = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+        if (!ALLOWED_EXTENSIONS.contains(ext)) {
+            Map<String, Object> errMap = new HashMap<>();
+            errMap.put("errno", 1);
+            errMap.put("message", "不支持的文件类型");
+            return errMap;
+        }
+        String safeName = originalFilename.replaceAll("[^a-zA-Z0-9._\\-]", "_");
+        String fileName = System.currentTimeMillis() + "-" + safeName;
         try {
-            FileUtil.writeBytes(file.getBytes(), filePath + flag + "-" + fileName);
+            FileUtil.writeBytes(file.getBytes(), filePath + fileName);
             System.out.println(fileName+ "--上传成功");
             Thread.sleep(1L);
         } catch (Exception e){
@@ -94,7 +128,7 @@ public class FileController {
         String http = fileBaseUrl +":" + port + "/files/download/" ;
         Map<String, Object> resMap = new HashMap<>();
         resMap.put("errno", 0);
-        resMap.put("data", CollUtil.newArrayList(Dict.create().set("url", http + flag + "-" + fileName)));
+        resMap.put("data", CollUtil.newArrayList(Dict.create().set("url", http + fileName)));
         return resMap;
     }
 }

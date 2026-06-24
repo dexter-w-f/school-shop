@@ -11,6 +11,10 @@ const request = axios.create({
 // 可以自请求发送前对请求做一些处理
 request.interceptors.request.use(config => {
     config.headers['Content-Type'] = 'application/json;charset=utf-8';
+    const user = JSON.parse(localStorage.getItem('system-user') || '{}');
+    if (user.token) {
+        config.headers['token'] = user.token;
+    }
     return config
 }, error => {
     return Promise.reject(error)
@@ -32,6 +36,7 @@ request.interceptors.response.use(
         // 当权限验证不通过的时候给出提示
         if (res.code === '401') {
             ElMessage.error(res.msg);
+            localStorage.removeItem('system-user');
             router.push("/login")
         }
         return res;
