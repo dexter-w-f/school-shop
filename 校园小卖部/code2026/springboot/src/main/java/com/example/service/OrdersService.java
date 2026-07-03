@@ -41,7 +41,7 @@ public class OrdersService {
      */
     @Transactional
     public void add(Orders orders) {
-        orders.setStatus("待接单");
+        orders.setStatus("待支付");
         orders.setTime(DateUtil.now());
         //随机订单号
         String orderNo = DateUtil.format(new Date(),"yyyyMMdd") + System.currentTimeMillis() + RandomUtil.randomNumbers(4);
@@ -69,10 +69,7 @@ public class OrdersService {
             totalPrice = totalPrice.add(goods.getPrice().multiply(BigDecimal.valueOf(cart.getNum())));
         }
 
-        // 余额检查在扣库存之前
-        if(user.getAccount().compareTo(totalPrice) < 0){
-            throw new CustomException("余额不足");
-        }
+
 
         // 执行实际扣库存、创建订单详情等操作
         for (Cart cart : cartList) {
@@ -95,8 +92,7 @@ public class OrdersService {
                 cartMapper.deleteById(cart.getId());
             }
         }
-        user.setAccount(user.getAccount().subtract(totalPrice));
-       userMapper.updateById(user);//更新用户余额
+        // 余额在支付时扣除
        orders.setTotal(totalPrice);
        ordersMapper.updateById(orders);//更新订单
 
@@ -123,8 +119,12 @@ public class OrdersService {
         if("已取消".equals(orders.getStatus())){
            Integer userId = orders.getUserId();
            User user = userMapper.selectById(userId);
-           user.setAccount(user.getAccount().add(orders.getTotal()));
-           userMapper.updateById(user);
+           // 如果是已支付的订单取消，才需要退余额
+           boolean wasPaid = !"待支付".equals(current.getStatus());
+           if (wasPaid && user != null) {
+               user.setAccount(user.getAccount().add(orders.getTotal()));
+               userMapper.updateById(user);
+           }
            //
             OrderDetail orderDetail = new OrderDetail();
             orderDetail.setOrderId(orders.getId());
@@ -172,5 +172,40 @@ public class OrdersService {
     }
 
 
+
+
+
+    /**
+     * 支付订单
+     */
+    @Transactional
+    public void pay(Integer orderId, String payType) {
+        Orders orders = ordersMapper.selectById(orderId);
+        if (orders == null) {
+            throw new CustomException("订单不存在");
+        }
+        if (!"待支付".equals(orders.getStatus())) {
+            throw new CustomException("订单状态异常，无法支付");
+        }
+
+        User user = userMapper.selectById(orders.getUserId());
+        if (user == null) {
+            throw new CustomException("用户不存在");
+        }
+
+        // 余额支付：扣余额
+        if ("余额支付".equals(payType)) {
+            if (user.getAccount().compareTo(orders.getTotal()) < 0) {
+                throw new CustomException("余额不足，请选择其他支付方式");
+            }
+            user.setAccount(user.getAccount().subtract(orders.getTotal()));
+            userMapper.updateById(user);
+        }
+        // 支付宝模拟/微信模拟：不扣余额，只记录支付方式
+
+        orders.setPayType(payType);
+        orders.setStatus("待接单");
+        ordersMapper.updateById(orders);
+    }
 
 }

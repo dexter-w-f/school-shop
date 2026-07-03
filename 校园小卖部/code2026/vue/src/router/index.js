@@ -1,4 +1,4 @@
-import {createRouter, createWebHistory} from 'vue-router'
+﻿import {createRouter, createWebHistory} from 'vue-router'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -39,7 +39,8 @@ const router = createRouter({
               { path: 'userRecharge', component: () => import('@/views/front/UserRecharge.vue')},
               { path: 'cart', component: () => import('@/views/front/Cart.vue')},
               { path: 'userOrders', component: () => import('@/views/front/UserOrders.vue')},
-              { path: 'userComment', component: () => import('@/views/front/UserComment.vue')}
+              { path: 'userComment', component: () => import('@/views/front/UserComment.vue')},
+              { path: 'payment', component: () => import('@/views/front/Payment.vue')}
           ]
       },
     { path: '/login', component: () => import('@/views/Login.vue') },
@@ -52,3 +53,4 @@ router.beforeEach(() => {
 })
 
 export default router
+

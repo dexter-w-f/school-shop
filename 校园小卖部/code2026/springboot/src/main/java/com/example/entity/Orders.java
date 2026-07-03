@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public class Orders {
+
     private Integer id;
     private String orderNo;
     private BigDecimal total;
@@ -12,8 +13,9 @@ public class Orders {
     private String status;
     private String time;
     private String deliverType;
-    private String address;
+   private String address;
     private String deliver;
+    private String payType;
     private List<Cart> cartList;
     private List<OrderDetail> orderDetailList;
     private String goodsName;
@@ -41,6 +43,14 @@ public class Orders {
 
     public void setDeliver(String deliver) {
         this.deliver = deliver;
+    }
+
+    public String getPayType() {
+        return payType;
+    }
+
+    public void setPayType(String payType) {
+        this.payType = payType;
     }
 
     public List<OrderDetail> getOrderDetailList() {

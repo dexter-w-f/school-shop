@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="front-container" style="">
     <div class="card" style="padding: 20px;display: flex; grid-gap: 20px;margin-bottom: 10px">
       <img :src="data.goods.img" style="width: 300px;height: 300px;">
@@ -60,8 +60,8 @@
 
     <el-dialog title="下单信息" width="30%" v-model="data.formVisible" :close-on-click-modal="false" destroy-on-close>
       <el-form ref="formRef" :model="data.form" :rules="data.rules" label-width="100px" style="padding-right: 30px">
-        <el-form-item label="配送类型" prop="type">
-          <el-radio-group v-model="data.form.deliverType">
+        <el-form-item label="配送类型" prop="deliverType">
+            <el-radio-group v-model="data.form.deliverType">
             <el-radio value="自提" label="自提">自提</el-radio>
             <el-radio value="外送" label="外送">外送</el-radio>
           </el-radio-group>
@@ -140,11 +140,11 @@ const addOrder = () => {
       data.form.userId = data.user.id
       data.form.cartList = [{goodsId: data.id, num:data.num} ]
       request.post('/orders/add',data.form).then(res => {
-        if (res.code === '200') {
-          ElMessage.success('下单成功')
-          load()
-          data.formVisible = false
-        } else {
+          if (res.code === '200') {
+            ElMessage.success('下单成功')
+            data.formVisible = false
+            router.push('/front/payment?orderId=' + res.data)
+          } else {
           ElMessage.error(res.msg)
         }
         data.orderLoading = false
@@ -220,11 +220,15 @@ const changeTab = (tabName) => {
 }
 
 const load = () => {
-  request.get('/goods/selectById/'+ data.id,).then(res => {
-    data.goods = res.data
-  })
-}
-load()
+    request.get('/goods/selectById/' + data.id).then(res => {
+      data.goods = res.data
+      if (res.data && res.data.status !== '上架') {
+        ElMessage.warning('该商品已下架')
+        router.push('/front/goods')
+      }
+    })
+  }
+  load()
 </script>
 
 <style>
@@ -234,3 +238,4 @@ load()
   padding-bottom: 10px
 }
 </style>
+

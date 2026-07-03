@@ -55,9 +55,11 @@
           </template>
         </el-table-column>
         <el-table-column label="配送类型" prop="deliverType"></el-table-column>
-         <el-table-column label="状态" prop="status">
-           <template #default="scope">
-             <el-tag type="danger" v-if="scope.row.status === '已取消'">已取消</el-tag>
+        <el-table-column label="支付方式" prop="payType"></el-table-column>
+        <el-table-column label="状态" prop="status">
+          <template #default="scope">
+            <el-tag type="warning" v-if="scope.row.status === '待支付'">待支付</el-tag>
+            <el-tag type="danger" v-if="scope.row.status === '已取消'">已取消</el-tag>
              <el-tag type="warning" v-if="scope.row.status === '待接单'">待接单</el-tag>
              <el-tag type="primary" v-if="scope.row.status === '已配送'">已配送</el-tag>
              <el-tag type="primary" v-if="scope.row.status === '已出货'">已出货</el-tag>
@@ -67,8 +69,9 @@
          <el-table-column label="下单时间" prop="time"></el-table-column>
         <el-table-column label="地址" prop="address" width="150"></el-table-column>
         <el-table-column label="配送信息" prop="deliver" width="150"></el-table-column>
-        <el-table-column label="订单操作" align="center" width="120">
-          <template #default="scope">
+       <el-table-column label="订单操作" align="center" width="120">
+         <template #default="scope">
+            <el-button @click="goPay(scope.row)" v-if="scope.row.status === '待支付'" type="warning" size="small">去支付</el-button>
             <el-button @click="cancel(scope.row)" v-if="scope.row.status === '待接单'" type="danger"> 取 消</el-button>
 
             <el-button @click="done(scope.row)" v-if="scope.row.status === '已出货'|| scope.row.status ==='已配送'" type="primary">确认收货</el-button>
@@ -160,7 +163,11 @@ const done = (row) => {
     data.form =row
     data.form.status = '已完成'
     updateOrder()
-  }).catch(err => {})
+}).catch(err => {})
+}
+
+const goPay = (row) => {
+  router.push('/front/payment?orderId=' + row.id)
 }
 
 // 编辑保存

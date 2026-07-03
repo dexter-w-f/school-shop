@@ -38,6 +38,7 @@
             <if test="deliverType != null">deliver_type,</if>
             <if test="address != null">address,</if>
             <if test="deliver != null">deliver,</if>
+            <if test="payType != null">pay_type,</if>
         </trim>
         values
         <trim prefix="(" suffix=" )" suffixOverrides=",">
@@ -50,6 +51,7 @@
             <if test="deliverType != null">#{deliverType},</if>
             <if test="address != null">#{address},</if>
             <if test="deliver != null">#{deliver},</if>
+            <if test="payType != null">#{payType},</if>
         </trim>
     </insert>
 
@@ -82,6 +84,9 @@
             </if>
             <if test="deliver != null">
                 deliver = #{deliver},
+            </if>
+            <if test="payType != null">
+                pay_type = #{payType},
             </if>
         </set>
         where id = #{id}

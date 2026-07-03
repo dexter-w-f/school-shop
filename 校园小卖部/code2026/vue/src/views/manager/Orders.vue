@@ -45,9 +45,11 @@
         </el-table-column>
          <el-table-column label="下单人" prop="userName"></el-table-column>
         <el-table-column label="配送类型" prop="deliverType"></el-table-column>
-         <el-table-column label="状态" prop="status">
-           <template #default="scope">
-             <el-tag type="danger" v-if="scope.row.status === '已取消'">已取消</el-tag>
+        <el-table-column label="支付方式" prop="payType"></el-table-column>
+        <el-table-column label="状态" prop="status">
+          <template #default="scope">
+            <el-tag type="warning" v-if="scope.row.status === '待支付'">待支付</el-tag>
+            <el-tag type="danger" v-if="scope.row.status === '已取消'">已取消</el-tag>
              <el-tag type="warning" v-if="scope.row.status === '待接单'">待接单</el-tag>
              <el-tag type="primary" v-if="scope.row.status === '已配送'">已配送</el-tag>
              <el-tag type="primary" v-if="scope.row.status === '已出货'">已出货</el-tag>

@@ -27,15 +27,15 @@
      /**
       * 每分钟执行一次，自动取消超过30分钟仍未接单的订单
       */
-     @Scheduled(fixedRate = 60000)
-     public void cancelTimeoutOrders() {
-         String deadline = LocalDateTime.now().minusMinutes(30)
-                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
- 
-         List<Orders> timeoutOrders = ordersMapper.selectTimeoutOrders("待接单", deadline);
- 
-         for (Orders order : timeoutOrders) {
-             try {
+    @Scheduled(fixedRate = 60000)
+    public void cancelTimeoutOrders() {
+        String deadline = LocalDateTime.now().minusMinutes(30)
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+        List<Orders> timeoutOrders = ordersMapper.selectTimeoutOrders("待支付", deadline);
+
+        for (Orders order : timeoutOrders) {
+            try {
                  order.setStatus("已取消");
                  ordersService.updateById(order);
                  log.info("已自动取消超时订单: {}", order.getOrderNo());

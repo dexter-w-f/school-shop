@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="front-container">
     <div class="card" style="padding: 20px">
       <div>
@@ -37,8 +37,8 @@
     </div>
     <el-dialog title="下单信息" width="30%" v-model="data.formVisible" :close-on-click-modal="false" destroy-on-close>
       <el-form ref="formRef" :model="data.form" :rules="data.rules" label-width="100px" style="padding-right: 30px">
-        <el-form-item label="配送类型" prop="type">
-          <el-radio-group v-model="data.form.deliverType">
+        <el-form-item label="配送类型" prop="deliverType">
+            <el-radio-group v-model="data.form.deliverType">
             <el-radio value="自提" label="自提">自提</el-radio>
             <el-radio value="外送" label="外送">外送</el-radio>
           </el-radio-group>
@@ -61,9 +61,13 @@
 <script setup>
 import request from "@/utils/request";
 import {reactive,ref} from "vue";
-import {ElMessageBox, ElMessage} from "element-plus";
-
-const formRef = ref()
+  import {ElMessageBox, ElMessage} from "element-plus";
+  
+  import {useRouter} from "vue-router";
+  
+  const router = useRouter();
+  
+  const formRef = ref()
 const data = reactive({
   user: JSON.parse(localStorage.getItem('system-user') || '{}'),
   total: 0,
@@ -88,28 +92,34 @@ const handleAddOrder = () =>{
 }
 
 
-const addOrder = () => {
-  if (data.orderLoading) return;
-  data.orderLoading = true;
-  if(!data.selectedRows?.length){
-    ElMessage.warning('请选择商品')
-    data.orderLoading = false;
-    return
-  }
-  data.form.userId = data.user.id
-  data.form.cartList = data.selectedRows
-  request.post('/orders/add',data.form).then(res => {
-    if (res.code === '200') {
-      ElMessage.success('下单成功')
-      data.formVisible=false
-      load()
-    } else {
-      ElMessage.error(res.msg)
+ const addOrder = () => {
+    if (data.orderLoading) return;
+    data.orderLoading = true;
+    if(!data.selectedRows?.length){
+      ElMessage.warning('请选择商品')
+      data.orderLoading = false;
+      return
     }
-  }).finally(() => {
-    data.orderLoading = false
-  })
-}
+    formRef.value.validate(valid => {
+      if (valid) {
+        data.form.userId = data.user.id
+        data.form.cartList = data.selectedRows
+        request.post('/orders/add',data.form).then(res => {
+          if (res.code === '200') {
+            ElMessage.success('下单成功')
+            data.formVisible=false
+            router.push('/front/payment?orderId=' + res.data)
+          } else {
+            ElMessage.error(res.msg)
+          }
+        }).finally(() => {
+          data.orderLoading = false
+        })
+      } else {
+        data.orderLoading = false
+      }
+    })
+  }
 
 const changeNum = (row) => {
   calTotal()
@@ -210,3 +220,5 @@ const reset = () => {
 }
 
 </script>
+
+
