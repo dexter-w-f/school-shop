@@ -3,7 +3,6 @@
     <div class="login-box">
       <div style="font-weight: bold; font-size: 30px; text-align: center; margin-bottom: 30px; color: #19e348">欢 迎 注 册</div>
       <el-form :model="data.form"  ref="formRef" :rules="data.rules">
-        <el-form-item prop="username">
         <el-form-item prop="name">
           <el-input :prefix-icon="User" size="large" v-model="data.form.name" placeholder="请输入姓名" />
         </el-form-item>
@@ -49,7 +48,6 @@
     form: { role: '普通用户' },
     captchaCountdown: 0,
     rules: {
-      username: [
       name: [
         { required: true, message: '请输入姓名', trigger: 'blur' },
       ],
