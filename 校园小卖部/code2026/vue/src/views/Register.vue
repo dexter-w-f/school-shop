@@ -1,10 +1,10 @@
-<template>
+﻿<template>
   <div class="login-container">
     <div class="login-box">
       <div style="font-weight: bold; font-size: 30px; text-align: center; margin-bottom: 30px; color: #19e348">欢 迎 注 册</div>
       <el-form :model="data.form"  ref="formRef" :rules="data.rules">
         <el-form-item prop="username">
-          <el-input :prefix-icon="User" size="large" v-model="data.form.username" placeholder="请输入账号" />
+          <el-input :prefix-icon="Message" size="large" v-model="data.form.username" placeholder="请输入邮箱" />
         </el-form-item>
         <el-form-item prop="password">
           <el-input :prefix-icon="Lock" size="large" v-model="data.form.password" placeholder="请输入密码" show-password />
@@ -36,7 +36,7 @@
 
 <script setup>
   import { reactive, ref } from "vue";
-  import { User, Lock } from "@element-plus/icons-vue";
+  import { Message, Lock } from "@element-plus/icons-vue";
   import request from "@/utils/request";
   import {ElMessage} from "element-plus";
   import router from "@/router";
@@ -46,7 +46,8 @@
     captchaCountdown: 0,
     rules: {
       username: [
-        { required: true, message: '请输入账号', trigger: 'blur' },
+        { required: true, message: '请输入邮箱', trigger: 'blur' },
+        { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
       ],
       password: [
         { required: true, message: '请输入密码', trigger: 'blur' },
@@ -74,7 +75,7 @@
     }, 1000)
     request.post('/captcha/send', { username: data.form.username }).then(res => {
       if (res.code === '200') {
-        ElMessage.success('验证码已发送（演示: ' + res.data + '）')
+        ElMessage.success('验证码已发送到您的邮箱，请查收')
       } else {
         ElMessage.error(res.msg)
         clearInterval(countdownTimer)
