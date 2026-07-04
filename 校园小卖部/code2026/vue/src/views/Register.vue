@@ -36,7 +36,7 @@
 
 <script setup>
   import { reactive, ref } from "vue";
-  import { Message, Lock } from "@element-plus/icons-vue";
+  import { User, Message, Lock } from "@element-plus/icons-vue";
   import request from "@/utils/request";
   import {ElMessage} from "element-plus";
   import router from "@/router";

@@ -105,6 +105,7 @@ public class WebController {
         user.setPassword(password);
         user.setNewPassword(newPassword);
         user.setRole(params.getOrDefault("role", "普通用户"));
+        user.setName(params.get("name"));
         userService.add(user);
         return Result.success();
     }
