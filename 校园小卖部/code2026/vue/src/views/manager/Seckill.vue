@@ -55,10 +55,16 @@
           <el-input-number :min="1" :max="999" v-model="data.form.totalStock" style="width:100%;" />
         </el-form-item>
         <el-form-item label="开始时间" prop="startTime" :rules="[{required:true,message:'请选择时间'}]">
-          <el-date-picker v-model="data.form.startTime" type="datetime" placeholder="选择开始时间" format="yyyy-MM-dd HH:mm:ss" value-format="yyyy-MM-dd HH:mm:ss" style="width:100%;" />
+          <div style="display: flex; gap: 8px; width: 100%;">
+            <el-date-picker v-model="data.form.startDate" type="date" placeholder="选择日期" format="YYYY-MM-DD" value-format="YYYY-MM-DD" style="flex:1;" />
+            <el-time-picker v-model="data.form.startTime" placeholder="选择时间" format="HH:mm:ss" value-format="HH:mm:ss" style="flex:1;" />
+          </div>
         </el-form-item>
         <el-form-item label="结束时间" prop="endTime" :rules="[{required:true,message:'请选择时间'}]">
-          <el-date-picker v-model="data.form.endTime" type="datetime" placeholder="选择结束时间" format="yyyy-MM-dd HH:mm:ss" value-format="yyyy-MM-dd HH:mm:ss" style="width:100%;" />
+          <div style="display: flex; gap: 8px; width: 100%;">
+            <el-date-picker v-model="data.form.endDate" type="date" placeholder="选择日期" format="YYYY-MM-DD" value-format="YYYY-MM-DD" style="flex:1;" />
+            <el-time-picker v-model="data.form.endTime" placeholder="选择时间" format="HH:mm:ss" value-format="HH:mm:ss" style="flex:1;" />
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -92,6 +98,8 @@ const handleAdd = () => {
 }
 
 const save = () => {
+  data.form.startTime = (data.form.startDate || '') + ' ' + (data.form.startTime || '')
+  data.form.endTime = (data.form.endDate || '') + ' ' + (data.form.endTime || '')
   request.post('/seckill/add', data.form).then(res => {
     if (res.code === '200') { ElMessage.success('创建成功'); data.formVisible = false; load() }
     else { ElMessage.error(res.msg) }
