@@ -44,6 +44,7 @@ public class ChatController {
     @PostMapping("/send")
     public Result send(@RequestBody Map<String, String> params) {
         String question = params.get("question");
+        String historyJson = params.get("history");
         String userIdStr = params.get("userId");
         if (question == null || question.trim().isEmpty()) {
             return Result.error("请输入问题");
@@ -58,8 +59,11 @@ public class ChatController {
                 .collect(Collectors.joining("\n"));
         String systemPrompt = "你是一个校园小卖部的在线客服助手，叫\"小卖部助手\"。"
                 + "你热情友好，回答简洁，帮学生解决商品咨询、订单问题、配送问题等。"
-                + "回答控制在100字以内。如用户查询订单或账户信息，请根据下方提供的用户数据如实回答。\n\n"
-                + "当前店铺在售商品如下（请只推荐以下商品，不要推荐不在列表中的商品）:\n" + goodsContext;
+                + "回复控制在100字以内，口语化，适当用表情。如用户查询订单或账户信息，请根据下方提供的用户数据如实回答。\n\n"
+                + "【店铺信息】\n- 名称: 校园小卖部\n- 营业时间: 每天 8:00-22:00\n- 配送方式: 到店自提（免费）/ 外送（满20元免配送费）\n"
+                + "- 地址: 校园内\n\n"
+                + "【售后政策】\n- 商品质量问题可退换\n- 非质量问题不影响二次销售可退\n- 退换请联系管理员\n\n"
+                + "【在售商品】（请只推荐以下商品，不要推荐不存在商品）:\n" + goodsContext;
 
         // 获取用户上下文信息
         String userContext = "";
@@ -91,8 +95,15 @@ public class ChatController {
         body.set("model", "deepseek-chat");
         body.set("stream", false);
 
+        // 消息数组: 系统提示词 + 历史对话 + 当前问题
         JSONArray messages = new JSONArray();
         messages.add(new JSONObject().set("role", "system").set("content", systemPrompt));
+        if (historyJson != null) {
+            JSONArray history = new JSONArray(historyJson);
+            for (int i = 0; i < history.size(); i++) {
+                messages.add(history.getJSONObject(i));
+            }
+        }
         messages.add(new JSONObject().set("role", "user").set("content", question));
         body.set("messages", messages);
 

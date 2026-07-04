@@ -16,6 +16,7 @@ const router = createRouter({
         { path: 'password', component: () => import('@/views/manager/Password.vue')},
         { path: 'category', component: () => import('@/views/manager/Category.vue')},
         { path: 'goods', component: () => import('@/views/manager/Goods.vue')},
+        { path: 'inventory', component: () => import('@/views/manager/Inventory.vue')},
         { path: 'carousel', component: () => import('@/views/manager/Carousel.vue')},
         { path: 'collect', component: () => import('@/views/manager/Collect.vue')},
         { path: 'orders', component: () => import('@/views/manager/Orders.vue')},
@@ -52,5 +53,6 @@ router.beforeEach(() => {
 })
 
 export default router
+
 
 

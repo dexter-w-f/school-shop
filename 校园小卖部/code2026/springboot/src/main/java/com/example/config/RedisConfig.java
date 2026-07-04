@@ -1,6 +1,5 @@
 package com.example.config;
 
-import org.springframework.context.annotation.Profile;
  
  import com.fasterxml.jackson.annotation.JsonAutoDetect;
  import com.fasterxml.jackson.annotation.PropertyAccessor;
@@ -22,7 +21,6 @@ import org.springframework.context.annotation.Profile;
  
 @Configuration
 @EnableCaching
-@Profile("redis")
 public class RedisConfig {
  
      @Bean

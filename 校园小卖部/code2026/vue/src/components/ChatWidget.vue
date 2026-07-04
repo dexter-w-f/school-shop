@@ -75,7 +75,8 @@ const send = () => {
   data.loading = true
   scrollToBottom()
 
-  request.post('/chat/send', { question: question, userId: data.user.id }).then(res => {
+  const history = data.messages.slice(1, -1).map(m => ({ role: m.role, content: m.content }))
+  request.post('/chat/send', { question, userId: data.user.id, history: JSON.stringify(history) }).then(res => {
     if (res.code === '200') {
       data.messages.push({ role: 'ai', content: res.data })
     } else {
