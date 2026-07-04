@@ -21,6 +21,7 @@ const router = createRouter({
         { path: 'collect', component: () => import('@/views/manager/Collect.vue')},
         { path: 'orders', component: () => import('@/views/manager/Orders.vue')},
         { path: 'comment', component: () => import('@/views/manager/Comment.vue')},
+        { path: 'chatManage', component: () => import('@/views/manager/ChatManage.vue')},
         { path: 'dataManager', component: () => import('@/views/manager/DataManager.vue')},
 
       ]
@@ -53,6 +54,7 @@ router.beforeEach(() => {
 })
 
 export default router
+
 
 
 

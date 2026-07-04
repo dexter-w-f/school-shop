@@ -56,7 +56,11 @@
               <span>轮播图信息</span>
             </el-menu-item>
             <el-menu-item index="/manager/comment">
-              <el-icon><Document /></el-icon>
+                <el-icon><ChatLineSquare /></el-icon>
+                <span>客服管理</span>
+              </el-menu-item>
+            <el-menu-item index="/manager/chatManage">
+               <el-icon><Document /></el-icon>
               <span>用户评论</span>
             </el-menu-item>
             <el-menu-item index="/manager/collect">

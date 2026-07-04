@@ -1,9 +1,10 @@
-package com.example.controller;
+﻿package com.example.controller;
 
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import com.example.common.Result;
+import cn.hutool.core.date.DateUtil;
 import com.example.entity.Goods;
 import com.example.entity.Orders;
 import com.example.entity.User;
@@ -123,8 +124,18 @@ public class ChatController {
                     .getStr("content");
 
             return Result.success(reply);
+            ChatMessage msg = new ChatMessage();
+            if (userIdStr != null) msg.setUserId(Integer.valueOf(userIdStr));
+            msg.setQuestion(question); msg.setAnswer(reply); msg.setTime(DateUtil.now());
+            chatMessageMapper.insert(msg);
         } catch (Exception e) {
+            try { ChatMessage msg = new ChatMessage();
+                if (userIdStr != null) msg.setUserId(Integer.valueOf(userIdStr));
+                msg.setQuestion(question); msg.setTime(DateUtil.now());
+                chatMessageMapper.insert(msg);
+            } catch (Exception ignored) {}
             return Result.error("客服暂时忙线，请稍后再试");
         }
     }
 }
+
