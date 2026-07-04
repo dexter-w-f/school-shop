@@ -57,6 +57,7 @@
 
   </div>
 
+  <ChatWidget />
 </template>
 <script setup>
 import { reactive, onMounted, onUnmounted } from "vue";
@@ -64,6 +65,7 @@ import router from "@/router";
 import request from "@/utils/request";
 import {ElMessage} from "element-plus";
 import { getCompareList, clearCompare } from "@/utils/compare";
+import ChatWidget from '@/components/ChatWidget.vue';
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('system-user') || '{}'),
