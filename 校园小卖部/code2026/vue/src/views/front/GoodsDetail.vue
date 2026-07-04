@@ -23,10 +23,30 @@
           <span style="color: #666;margin-left: 20px">剩余库存{{data.goods.store}}</span>
         </div>
         <div  style="margin-bottom: 20px;padding: 10px;background-color: lavenderblush;border-radius: 5px;line-height: 25px;text-align: justify">{{data.goods.description}}</div>
+        <!-- 秒杀活动 -->
+        <div v-if="data.seckillActivity" style="margin-bottom: 15px; padding: 12px; background: linear-gradient(135deg, #ff4d4f, #ff7a45); border-radius: 8px; color: #fff;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <span style="background: #fff; color: #ff4d4f; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 12px;">秒杀</span>
+              <span style="margin-left: 8px; font-size: 14px;">秒杀价</span>
+              <span style="font-size: 24px; font-weight: bold; margin-left: 5px;">￥{{ data.seckillActivity.seckillPrice }}</span>
+              <span style="text-decoration: line-through; opacity: 0.7; margin-left: 8px; font-size: 13px;">￥{{ data.goods.price }}</span>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 12px; opacity: 0.85;">剩余 {{ data.seckillEndTime }} 结束</div>
+              <div style="font-size: 12px; opacity: 0.85;">仅剩 {{ data.seckillActivity.totalStock }} 件</div>
+            </div>
+          </div>
+        </div>
         <div>
-          <el-input-number style="width: 150px;height: 40px;" :min="1" v-model="data.num"></el-input-number>
-          <el-button @click="addCart" style="height: 40px;margin-left: 5px" type="danger" :loading="data.cartLoading">加入购物车</el-button>
-          <el-button style="height: 40px;margin-left: 5px" type="danger" @click="handleAddOrder" :loading="data.orderLoading">立即购买</el-button>
+          <!-- 秒杀按钮 -->
+          <el-button v-if="data.seckillActivity" style="height: 45px; width: 100%; font-size: 18px;" type="danger" @click="seckillBuy" :loading="data.seckillLoading">立即秒杀 ￥{{ data.seckillActivity.seckillPrice }}</el-button>
+          <!-- 普通按钮 -->
+          <template v-if="!data.seckillActivity">
+            <el-input-number style="width: 150px;height: 40px;" :min="1" v-model="data.num"></el-input-number>
+            <el-button @click="addCart" style="height: 40px;margin-left: 5px" type="danger" :loading="data.cartLoading">加入购物车</el-button>
+            <el-button style="height: 40px;margin-left: 5px" type="danger" @click="handleAddOrder" :loading="data.orderLoading">立即购买</el-button>
+          </template>
         </div>
       </div>
     </div>
@@ -107,6 +127,10 @@ const data = reactive({
   orderLoading: false,
   cartLoading: false,
   formVisible: false,
+  seckillActivity: null,
+  seckillEndTime: '',
+  seckillLoading: false,
+  timer: null,
   rules:{
     deliverType:[
       {required: true, message: '请选择配送类型', trigger: 'change'}
@@ -223,6 +247,34 @@ const changeTab = (tabName) => {
 data.current = tabName
 }
 
+const loadSeckill = () => {
+  request.get('/seckill/active').then(res => {
+    if (res.data) {
+      const found = res.data.find(a => a.goodsId === data.id)
+      if (found) {
+        data.seckillActivity = found
+        // 显示结束时间
+        if (found.endTime) {
+          data.seckillEndTime = found.endTime.substring(0, 16)
+        }
+      }
+    }
+  })
+}
+
+const seckillBuy = () => {
+  if (data.seckillLoading) return
+  data.seckillLoading = true
+  request.post('/seckill/buy?userId=' + data.user.id + '&activityId=' + data.seckillActivity.id).then(res => {
+    if (res.code === '200') {
+      ElMessage.success('抢购成功！请尽快支付')
+      router.push('/front/payment?orderId=' + res.data)
+    } else {
+      ElMessage.error(res.msg)
+    }
+  }).finally(() => { data.seckillLoading = false })
+}
+
 const toggleCompare = () => {
   const id = data.id
   if (isInCompare(id)) {
@@ -248,6 +300,7 @@ const load = () => {
     })
   }
   load()
+  loadSeckill()
 </script>
 
 <style>
