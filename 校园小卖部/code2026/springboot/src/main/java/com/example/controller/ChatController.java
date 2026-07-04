@@ -85,7 +85,7 @@ public class ChatController {
                     List<Orders> orderList = ordersService.selectAll(orderQuery);
                     if (orderList != null && !orderList.isEmpty()) {
                         userContext += "\n- 近期订单:\n";
-                        for (Orders o : orderList.stream().limit(5).collect(Collectors.toList())) {
+                        for (Orders o : orderList.stream().collect(Collectors.toList())) {
                             userContext += "  订单#" + o.getOrderNo() + ": " + o.getStatus() + ", ￥" + o.getTotal() + ", " + o.getTime() + "\n";
                         }
                     }
@@ -148,6 +148,7 @@ public class ChatController {
         }
     }
 }
+
 
 
 
