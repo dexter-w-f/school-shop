@@ -27,8 +27,8 @@ public class CaptchaController {
         redisTemplate.opsForValue().set("captcha:" + email, code, 5, TimeUnit.MINUTES);
 
         try {
-            String scriptPath = new File(System.getProperty("user.dir")).getParent() + "/vue/email-sender.js";
-            Process p = new ProcessBuilder("node", scriptPath, email, code).start();
+            String scriptPath = System.getProperty("user.dir") + "/校园小卖部/code2026/vue/email-sender.js";
+            Process p = new ProcessBuilder("C:\\Program Files\\nodejs\\node.exe", scriptPath, email, code).start();
             if (p.waitFor() == 0) return Result.success();
             return Result.error("邮件发送失败，请稍后重试");
         } catch (Exception e) {
@@ -36,3 +36,4 @@ public class CaptchaController {
         }
     }
 }
+
