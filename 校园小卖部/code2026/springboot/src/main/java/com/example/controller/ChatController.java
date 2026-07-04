@@ -117,7 +117,7 @@ public class ChatController {
                     .header("Authorization", "Bearer " + apiKey)
                     .header("Content-Type", "application/json")
                     .body(body.toString())
-                    .timeout(15000)
+                    .timeout(30000)
                     .execute()
                     .body();
 
@@ -136,6 +136,7 @@ public class ChatController {
 
             return Result.success(reply);
         } catch (Exception e) {
+            System.err.println("[Chat] DeepSeek API错误: " + e.getMessage());
             try {
                 ChatMessage msg = new ChatMessage();
                 if (userIdStr != null) msg.setUserId(Integer.valueOf(userIdStr));
@@ -147,6 +148,8 @@ public class ChatController {
         }
     }
 }
+
+
 
 
 
