@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <div class="card" style="margin-bottom: 10px; display: flex; align-items: center; gap: 15px; padding: 15px;">
       <span style="font-weight: bold;">秒杀活动</span>
@@ -90,7 +90,7 @@ const load = () => {
     if (res.data) { data.tableData = res.data; data.activeCount = res.data.filter(a => a.status === '进行中').length }
   })
 }
-const loadGoods = () => { request.get('/goods/selectAll').then(res => { if (res.data) data.goodsList = res.data }) }
+const loadGoods = () => { request.get('/goods/selectAll').then(res => { if (res.data) data.goodsList = res.data.filter((g) => g.status === '上架') }) }
 
 const handleAdd = () => {
   data.form = { seckillPrice: 1, totalStock: 10 }
@@ -117,3 +117,4 @@ const handleDelete = (row) => {
 
 onMounted(() => { load(); loadGoods() })
 </script>
+
