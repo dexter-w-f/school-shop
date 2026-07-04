@@ -1,4 +1,4 @@
-﻿package com.example.controller;
+package com.example.controller;
 
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONArray;
@@ -7,8 +7,10 @@ import com.example.common.Result;
 import cn.hutool.core.date.DateUtil;
 import com.example.entity.Goods;
 import com.example.entity.Orders;
+import com.example.entity.ChatMessage;
 import com.example.entity.User;
 import com.example.mapper.GoodsMapper;
+import com.example.mapper.ChatMessageMapper;
 import com.example.mapper.UserMapper;
 import com.example.service.OrdersService;
 import jakarta.annotation.Resource;
@@ -41,6 +43,8 @@ public class ChatController {
 
     @Resource
     private OrdersService ordersService;
+    @Resource
+    private ChatMessageMapper chatMessageMapper;
 
     @PostMapping("/send")
     public Result send(@RequestBody Map<String, String> params) {
@@ -123,19 +127,26 @@ public class ChatController {
                     .getJSONObject("message")
                     .getStr("content");
 
-            return Result.success(reply);
             ChatMessage msg = new ChatMessage();
             if (userIdStr != null) msg.setUserId(Integer.valueOf(userIdStr));
-            msg.setQuestion(question); msg.setAnswer(reply); msg.setTime(DateUtil.now());
+            msg.setQuestion(question);
+            msg.setAnswer(reply);
+            msg.setTime(DateUtil.now());
             chatMessageMapper.insert(msg);
+
+            return Result.success(reply);
         } catch (Exception e) {
-            try { ChatMessage msg = new ChatMessage();
+            try {
+                ChatMessage msg = new ChatMessage();
                 if (userIdStr != null) msg.setUserId(Integer.valueOf(userIdStr));
-                msg.setQuestion(question); msg.setTime(DateUtil.now());
+                msg.setQuestion(question);
+                msg.setTime(DateUtil.now());
                 chatMessageMapper.insert(msg);
             } catch (Exception ignored) {}
             return Result.error("客服暂时忙线，请稍后再试");
         }
     }
 }
+
+
 
