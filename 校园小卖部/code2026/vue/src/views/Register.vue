@@ -12,6 +12,15 @@
         <el-form-item prop="newPassword">
           <el-input :prefix-icon="Lock" size="large" v-model="data.form.newPassword" placeholder="请确认密码" show-password />
         </el-form-item>
+        <!-- 验证码 -->
+        <el-form-item prop="captchaCode">
+          <div style="display: flex; gap: 10px; width: 100%;">
+            <el-input v-model="data.form.captchaCode" placeholder="请输入验证码" style="flex: 1;" />
+            <el-button @click="sendCaptcha" :disabled="data.captchaCountdown > 0" style="width: 130px; flex-shrink: 0;">
+              {{ data.captchaCountdown > 0 ? data.captchaCountdown + '秒后重试' : '获取验证码' }}
+            </el-button>
+          </div>
+        </el-form-item>
 
         <el-form-item>
           <el-button size="large"  style="width: 100%;background-color:#0c9c7a;border-color: #0c9c7a; color:white" @click="register">注 册</el-button>
@@ -34,6 +43,7 @@
 
   const data = reactive({
     form: { role: '普通用户' },
+    captchaCountdown: 0,
     rules: {
       username: [
         { required: true, message: '请输入账号', trigger: 'blur' },
@@ -45,11 +55,33 @@
       newPassword: [
         { required: true, message: '请确认密码', trigger: 'blur' },
         { validator: validateConfirmPassword, trigger: 'blur' }
+      ],
+      captchaCode: [
+        { required: true, message: '请输入验证码', trigger: 'blur' },
       ]
     }
   })
 
   const formRef = ref()
+
+  let countdownTimer = null
+  const sendCaptcha = () => {
+    if (!data.form.username) { ElMessage.warning('请先输入账号'); return }
+    data.captchaCountdown = 60
+    countdownTimer = setInterval(() => {
+      data.captchaCountdown--
+      if (data.captchaCountdown <= 0) clearInterval(countdownTimer)
+    }, 1000)
+    request.post('/captcha/send', { username: data.form.username }).then(res => {
+      if (res.code === '200') {
+        ElMessage.success('验证码已发送（演示: ' + res.data + '）')
+      } else {
+        ElMessage.error(res.msg)
+        clearInterval(countdownTimer)
+        data.captchaCountdown = 0
+      }
+    })
+  }
 
   // 验证两次密码是否一致
   const validateConfirmPassword = (rule, value, callback) => {
@@ -68,6 +100,7 @@
         request.post('/register', data.form).then(res => {
           if (res.code === '200') {
             ElMessage.success("注册成功")
+            if (countdownTimer) clearInterval(countdownTimer)
             router.push('/login')
 
           } else {

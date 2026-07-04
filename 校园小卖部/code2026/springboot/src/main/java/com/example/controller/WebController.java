@@ -10,6 +10,7 @@ import com.example.mapper.OrderDetailMapper;
 import com.example.service.*;
 import com.example.utils.TokenUtils;
 import com.example.utils.LoginAttemptLimiter;
+import org.springframework.data.redis.core.RedisTemplate;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,9 @@ public class WebController {
 
     @Resource
     private LoginAttemptLimiter loginAttemptLimiter;
+
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 默认请求接口
@@ -79,10 +83,28 @@ public class WebController {
      * 注册
      */
     @PostMapping("/register")
-    public Result register(@RequestBody User user) {
-        if (!user.getPassword().equals(user.getNewPassword())) {
+    public Result register(@RequestBody Map<String, String> params) {
+        String username = params.get("username");
+        String password = params.get("password");
+        String newPassword = params.get("newPassword");
+        String captchaCode = params.get("captchaCode");
+
+        // 校验验证码
+        String key = "captcha:" + username;
+        String stored = (String) redisTemplate.opsForValue().get(key);
+        if (stored == null) return Result.error("验证码已过期，请重新获取");
+        if (!stored.equals(captchaCode)) return Result.error("验证码错误");
+        redisTemplate.delete(key);
+
+        if (!password.equals(newPassword)) {
             return Result.error("两次密码不一致");
         }
+
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(password);
+        user.setNewPassword(newPassword);
+        user.setRole(params.getOrDefault("role", "普通用户"));
         userService.add(user);
         return Result.success();
     }
