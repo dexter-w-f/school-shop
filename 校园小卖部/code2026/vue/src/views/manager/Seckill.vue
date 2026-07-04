@@ -121,3 +121,4 @@ const handleDelete = (row) => {
 onMounted(() => { load(); loadGoods() })
 </script>
 
+
