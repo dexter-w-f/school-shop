@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <div style="height: 60px; background-color: #2e3143; display: flex; align-items: center; ">
       <div style="width: 20%;">
@@ -40,24 +40,60 @@
 
       </div>
     </div>
-    <div style="background-color:#ced4df">
+    <div style="background-color:#ced4df" :style="{ paddingBottom: data.compareCount > 0 ? '60px' : '0' }">
       <router-view @updateUser="updateUser" />
     </div>
 
+    <!-- 对比浮动栏 -->
+    <div v-if="data.compareCount > 0" style="position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 2px solid #409eff; padding: 10px 30px; display: flex; align-items: center; justify-content: space-between; z-index: 999; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);">
+      <div>
+        <span style="font-weight: bold;">已选 {{ data.compareCount }} 件商品</span>
+        <span style="color: #999; font-size: 13px; margin-left: 10px;">最多对比4件</span>
+      </div>
+      <div>
+        <el-button @click="handleClearCompare" size="small">清空</el-button>
+        <el-button @click="goCompare" type="primary" size="small" :disabled="data.compareCount < 2">开始对比</el-button>
+      </div>
+    </div>
 
   </div>
 
 </template>
 <script setup>
-import { reactive } from "vue";
+import { reactive, onMounted, onUnmounted } from "vue";
 import router from "@/router";
 import request from "@/utils/request";
 import {ElMessage} from "element-plus";
+import { getCompareList, clearCompare } from "@/utils/compare";
 
 const data = reactive({
   user: JSON.parse(localStorage.getItem('system-user') || '{}'),
-  goodsName:null
+  goodsName:null,
+  compareCount: 0
 })
+
+const updateCompareCount = () => {
+  data.compareCount = getCompareList().length
+}
+
+let compareTimer
+onMounted(() => {
+  updateCompareCount()
+  compareTimer = setInterval(updateCompareCount, 1000)
+})
+onUnmounted(() => {
+  clearInterval(compareTimer)
+})
+
+const goCompare = () => {
+  router.push('/front/compare')
+}
+
+const handleClearCompare = () => {
+  clearCompare()
+  data.compareCount = 0
+  ElMessage.success('已清空对比列表')
+}
 
 const search = () => {
   if(data.goodsName){
@@ -115,3 +151,4 @@ const updateUser = () => {
   background-color: #9ec6bc !important;
 }
 </style>
+

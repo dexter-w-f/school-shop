@@ -21,8 +21,11 @@
             <img :src="item.img" style="width: 100%;height:200px; border-radius: 5px 5px 0 0">
             <div style="padding: 5px">
               <div class="line1" style="font-size: 18px;margin-bottom: 5px">{{item.name}}</div>
-              <div><span style="color: red">￥</span> <b style="color: red;font-size: 15px">{{item.price}}</b>
-                <span style="margin-left: 10px;color: #666"> 销量：{{item.saleCount}} </span>
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div><span style="color: red">￥</span> <b style="color: red;font-size: 15px">{{item.price}}</b>
+                  <span style="margin-left: 10px;color: #666"> 销量：{{item.saleCount}} </span>
+                </div>
+                <el-button size="small" @click.stop="toggleCompare(item.id)" :type="isInCompare(item.id) ? 'warning' : 'default'" plain>对比</el-button>
               </div>
             </div>
           </div>
@@ -40,9 +43,12 @@
 </template>
 
 <script setup>
-import {reactive,} from "vue";
+import {reactive} from "vue";
 import router from "@/router";
 import request from "@/utils/request";
+import { ElMessage } from "element-plus";
+import { getCompareList, addToCompare, removeFromCompare, isInCompare } from "@/utils/compare";
+
 const data = reactive({
   name:router.currentRoute.value.query.name,
   tableData:[],
@@ -89,6 +95,20 @@ const clearPathParam = () => {
   window.history.pushState({}, 0, url)
 }
 clearPathParam()
+
+const toggleCompare = (id) => {
+  if (isInCompare(id)) {
+    removeFromCompare(id)
+    ElMessage.success('已移除对比')
+  } else {
+    const res = addToCompare(id)
+    if (res.ok) {
+      ElMessage.success(res.msg)
+    } else {
+      ElMessage.warning(res.msg)
+    }
+  }
+}
 </script>
 
 <style scoped>

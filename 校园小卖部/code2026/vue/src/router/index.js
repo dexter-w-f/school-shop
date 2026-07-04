@@ -40,6 +40,7 @@ const router = createRouter({
               { path: 'cart', component: () => import('@/views/front/Cart.vue')},
               { path: 'userOrders', component: () => import('@/views/front/UserOrders.vue')},
               { path: 'userComment', component: () => import('@/views/front/UserComment.vue')},
+              { path: 'compare', component: () => import('@/views/front/Compare.vue')},
               { path: 'payment', component: () => import('@/views/front/Payment.vue')}
           ]
       },

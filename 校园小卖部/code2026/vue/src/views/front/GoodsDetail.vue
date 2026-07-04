@@ -10,6 +10,9 @@
           <div style="width: 60px;cursor: pointer;color: #666" @click="addCollect" v-if="!data.userCollect?.id">
             <el-icon style="position: relative;top:3px" size="18"><Star /></el-icon>收藏
           </div>
+          <div style="width: 60px;cursor: pointer;color: #409eff" @click="toggleCompare">
+            <el-icon style="position: relative;top:3px" size="18"><CopyDocument /></el-icon>对比
+          </div>
           <div style="width: 100px;cursor: pointer;color: orange" @click="removeCollect" v-if="data.userCollect?.id">
             <el-icon style="position: relative;top:3px" size="18"><StarFilled /></el-icon>取消收藏
           </div>
@@ -86,6 +89,7 @@ import {reactive, ref} from "vue";
 import router from "@/router";
 import request from "@/utils/request";
 import {ElMessage} from "element-plus";
+import { getCompareList, addToCompare, removeFromCompare, isInCompare } from "@/utils/compare";
 
 const formRef = ref()
 const data = reactive({
@@ -216,7 +220,22 @@ const addCollect = () => {
 }
 
 const changeTab = (tabName) => {
-  data.current = tabName
+data.current = tabName
+}
+
+const toggleCompare = () => {
+  const id = data.id
+  if (isInCompare(id)) {
+    removeFromCompare(id)
+    ElMessage.success('已移除对比')
+  } else {
+    const res = addToCompare(id)
+    if (res.ok) {
+      ElMessage.success(res.msg)
+    } else {
+      ElMessage.warning(res.msg)
+    }
+  }
 }
 
 const load = () => {
