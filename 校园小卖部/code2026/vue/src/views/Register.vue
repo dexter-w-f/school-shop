@@ -85,7 +85,7 @@
   }
 
   // 验证两次密码是否一致
-  const validateConfirmPassword = (rule, value, callback) => {
+  function validateConfirmPassword(rule, value, callback) {
     if (value !== data.form.password) {
       callback(new Error('两次输入的密码不一致'))
     } else {

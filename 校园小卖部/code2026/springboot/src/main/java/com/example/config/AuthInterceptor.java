@@ -21,7 +21,8 @@
         "/swagger-ui",
         "/v3/api-docs",
         "/carousel/selectAll",
-         "/category/selectAll"
+        "/category/selectAll",
+        "/captcha/",
     };
  
      @Override
