@@ -32,7 +32,6 @@
               <el-dropdown-item @click="router.push('/front/userComment')">我的评价</el-dropdown-item>
               <el-dropdown-item @click="router.push('/front/person')">个人信息</el-dropdown-item>
               <el-dropdown-item @click="router.push('/front/password')">修改密码</el-dropdown-item>
-              <el-dropdown-item @click="router.push('/front/userRecharge')">我的充值</el-dropdown-item>
               <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -151,4 +150,5 @@ const updateUser = () => {
   background-color: #9ec6bc !important;
 }
 </style>
+
 

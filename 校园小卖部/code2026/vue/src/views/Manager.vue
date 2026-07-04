@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <div style="height: 60px; background-color: #2e3143; display: flex; align-items: center; border-bottom: 1px solid #ddd">
       <div style="flex: 1">
@@ -58,10 +58,6 @@
             <el-menu-item index="/manager/collect">
               <el-icon><Document /></el-icon>
               <span>用户收藏</span>
-            </el-menu-item>
-            <el-menu-item index="/manager/recharge">
-              <el-icon><Document /></el-icon>
-              <span>用户充值</span>
             </el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="user">
@@ -139,3 +135,4 @@ const logout = () => {
   color: #000;
 }
 </style>
+
