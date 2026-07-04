@@ -100,6 +100,9 @@ const handleAdd = () => {
 const save = () => {
   data.form.startTime = (data.form.startDate || '') + ' ' + (data.form.startTime || '')
   data.form.endTime = (data.form.endDate || '') + ' ' + (data.form.endTime || '')
+  // 校验至少持续一天
+  const diff = new Date(data.form.endTime) - new Date(data.form.startTime)
+  if (diff < 86400000) { ElMessage.warning('秒杀活动至少持续一天'); return }
   request.post('/seckill/add', data.form).then(res => {
     if (res.code === '200') { ElMessage.success('创建成功'); data.formVisible = false; load() }
     else { ElMessage.error(res.msg) }

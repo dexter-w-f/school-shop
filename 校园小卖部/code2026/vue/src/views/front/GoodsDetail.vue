@@ -250,7 +250,8 @@ data.current = tabName
 const loadSeckill = () => {
   request.get('/seckill/active').then(res => {
     if (res.data) {
-      const found = res.data.find(a => a.goodsId === data.id)
+
+      const found = res.data.find(a => Number(a.goodsId) === Number(data.id))
       if (found) {
         data.seckillActivity = found
         // 显示结束时间
