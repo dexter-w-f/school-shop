@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <!-- 浮动客服按钮 -->
     <div @click="toggle" 
@@ -56,6 +56,7 @@ const data = reactive({
   open: false,
   input: '',
   loading: false,
+  user: JSON.parse(localStorage.getItem('system-user') || '{}'),
   messages: [
     { role: 'ai', content: '你好！我是小卖部助手，有什么可以帮你的吗？😊' }
   ]
@@ -74,7 +75,7 @@ const send = () => {
   data.loading = true
   scrollToBottom()
 
-  request.post('/chat/send', { question }).then(res => {
+  request.post('/chat/send', { question: question, userId: data.user.id }).then(res => {
     if (res.code === '200') {
       data.messages.push({ role: 'ai', content: res.data })
     } else {

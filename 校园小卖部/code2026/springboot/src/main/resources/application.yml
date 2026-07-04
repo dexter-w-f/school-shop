@@ -1,4 +1,4 @@
-server:
+﻿server:
   port: 9090
 
 # 数据库配置
@@ -22,6 +22,7 @@ mybatis:
 
 fileBaseUrl: http://localhost
 
-# AI 客服 API 密钥（请替换为你自己的 key）
+# AI 客服 API 密钥
 ai:
   api-key: YOUR_DEEPSEEK_API_KEY_HERE
+
