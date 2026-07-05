@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div>
     <div style="height: 60px; background-color: #2e3143; display: flex; align-items: center; ">
       <div style="width: 20%;">
@@ -30,6 +30,7 @@
             <el-dropdown-menu>
               <el-dropdown-item @click="router.push('/front/userCollect')">我的收藏</el-dropdown-item>
               <el-dropdown-item @click="router.push('/front/userComment')">我的评价</el-dropdown-item>
+                            <el-dropdown-item @click="router.push('/front/userRefund')">我的售后</el-dropdown-item>
               <el-dropdown-item @click="router.push('/front/person')">个人信息</el-dropdown-item>
               <el-dropdown-item @click="router.push('/front/password')">修改密码</el-dropdown-item>
               <el-dropdown-item @click="logout">退出登录</el-dropdown-item>

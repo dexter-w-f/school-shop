@@ -74,7 +74,8 @@
             <el-button @click="goPay(scope.row)" v-if="scope.row.status === '待支付'" type="warning" size="small">去支付</el-button>
             <el-button @click="cancel(scope.row)" v-if="scope.row.status === '待接单'" type="danger"> 取 消</el-button>
 
-            <el-button @click="done(scope.row)" v-if="scope.row.status === '已出货'|| scope.row.status ==='已配送'" type="primary">确认收货</el-button>
+            
+            <el-button @click="handleApplyRefund(scope.row)" v-if="scope.row.status === '待接单'|| scope.row.status === '已出货'|| scope.row.status === '已配送'|| scope.row.status === '已完成'" type="danger" size="small">申请售后</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -83,7 +84,42 @@
       </div>
     </div>
 
-    <el-dialog title="评价信息" width="30%" v-model="data.formVisible" :close-on-click-modal="false" destroy-on-close>
+        <!-- 售后申请弹窗 -->
+    <el-dialog title="申请售后" width="45%" v-model="data.refundVisible" :close-on-click-modal="false" destroy-on-close>
+      <el-form ref="refundFormRef" :model="data.refundForm" :rules="data.refundRules" label-width="100px" style="padding-right: 30px;padding-top: 20px">
+        <el-form-item label="售后类型" prop="type">
+          <el-radio-group v-model="data.refundForm.type">
+            <el-radio value="仅退款">仅退款（未发货/未收到货）</el-radio>
+            <el-radio value="退货退款">退货退款</el-radio>
+            <el-radio value="换货">换货</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="退款金额" prop="amount">
+          <el-input-number v-model="data.refundForm.amount" :precision="2" :min="0.01" :max="data.refundForm.maxAmount" :step="1" style="width: 200px"></el-input-number>
+          <span style="margin-left: 10px; color: #999">订单总额：¥{{ data.refundForm.maxAmount }}</span>
+        </el-form-item>
+        <el-form-item label="退款原因" prop="reason">
+          <el-select v-model="data.refundForm.reason" placeholder="请选择退款原因" style="width: 100%">
+            <el-option label="商品质量问题" value="商品质量问题"></el-option>
+            <el-option label="商品与描述不符" value="商品与描述不符"></el-option>
+            <el-option label="收到商品破损" value="收到商品破损"></el-option>
+            <el-option label="发错货/少发货" value="发错货/少发货"></el-option>
+            <el-option label="不想要了" value="不想要了"></el-option>
+            <el-option label="其他原因" value="其他原因"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="问题描述">
+          <el-input type="textarea" :rows="4" v-model="data.refundForm.description" placeholder="请详细描述您的问题，有助于更快处理" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="data.refundVisible = false">取 消</el-button>
+        <el-button type="primary" @click="submitRefund">提 交</el-button>
+      </span>
+      </template>
+    </el-dialog>
+<el-dialog title="评价信息" width="30%" v-model="data.formVisible" :close-on-click-modal="false" destroy-on-close>
       <el-form ref="formRef" :model="data.form" :rules="data.rules" label-width="80px" style="padding-right: 30px;padding-top: 20px">
         <el-form-item label="评分" prop="score">
           <el-rate show-score allow-half v-model="data.form.score"></el-rate>
@@ -123,6 +159,19 @@ const data = reactive({
   tableData: [],
   orderNo: null,
   goodsName:null,
+      refundVisible: false,
+      refundForm: {},
+      refundRules:{
+        type:[
+          {required:true,message:'请选择售后类型',trigger:'change'}
+        ],
+        amount:[
+          {required:true,message:'请输入退款金额',trigger:'blur'}
+        ],
+        reason:[
+          {required:true,message:'请选择退款原因',trigger:'change'}
+        ]
+      },
   rules:{
     content:[
       {required:true,message:'请输入内容',trigger:'blur'}
@@ -255,6 +304,36 @@ const reset = () => {
   load()
 }
 
+
+const refundFormRef = ref()
+
+const handleApplyRefund = (row) => {
+  data.refundForm = {
+    orderId: row.id,
+    maxAmount: row.total,
+    amount: row.total,
+    type: '仅退款',
+    reason: '',
+    description: ''
+  }
+  data.refundVisible = true
+}
+
+const submitRefund = () => {
+  refundFormRef.value.validate(valid => {
+    if (valid) {
+      request.post('/refundOrders/add', data.refundForm).then(res => {
+        if (res.code === '200') {
+          ElMessage.success('售后申请已提交，请等待审核')
+          data.refundVisible = false
+          load()
+        } else {
+          ElMessage.error(res.msg)
+        }
+      })
+    }
+  })
+}
 </script>
 
 <style scoped>

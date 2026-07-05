@@ -1,4 +1,4 @@
-﻿import {createRouter, createWebHistory} from 'vue-router'
+import {createRouter, createWebHistory} from 'vue-router'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -23,6 +23,7 @@ const router = createRouter({
         { path: 'orders', component: () => import('@/views/manager/Orders.vue')},
         { path: 'comment', component: () => import('@/views/manager/Comment.vue')},
         { path: 'chatManage', component: () => import('@/views/manager/ChatManage.vue')},
+        { path: 'refund', component: () => import('@/views/manager/Refund.vue')},
         { path: 'dataManager', component: () => import('@/views/manager/DataManager.vue')},
 
       ]
@@ -42,7 +43,8 @@ const router = createRouter({
               { path: 'userOrders', component: () => import('@/views/front/UserOrders.vue')},
               { path: 'userComment', component: () => import('@/views/front/UserComment.vue')},
               { path: 'compare', component: () => import('@/views/front/Compare.vue')},
-              { path: 'payment', component: () => import('@/views/front/Payment.vue')}
+              { path: 'payment', component: () => import('@/views/front/Payment.vue')},
+              { path: 'userRefund', component: () => import('@/views/front/UserRefund.vue')}
           ]
       },
     { path: '/login', component: () => import('@/views/Login.vue') },

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div>
     <div style="height: 60px; background-color: #2e3143; display: flex; align-items: center; border-bottom: 1px solid #ddd">
       <div style="flex: 1">
@@ -66,6 +66,10 @@
             <el-menu-item index="/manager/chatManage">
                 <el-icon><ChatLineSquare /></el-icon>
                 <span>客服管理</span>
+            </el-menu-item>
+            <el-menu-item index="/manager/refund">
+                <el-icon><Wallet /></el-icon>
+                <span>售后管理</span>
             </el-menu-item>
             <el-menu-item index="/manager/collect">
               <el-icon><Document /></el-icon>

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.Map;
 
 /**
  * 业务处理
@@ -36,6 +37,8 @@ public class OrdersService {
     OrderDetailMapper orderDetailMapper;
     @Resource
     CartMapper cartMapper;
+    @Resource
+    private AlipayService alipayService;
     /**
      * 新增
      */
@@ -206,6 +209,76 @@ public class OrdersService {
         orders.setPayType(payType);
         orders.setStatus("待接单");
         ordersMapper.updateById(orders);
+    }
+
+
+    /**
+     * 创建支付宝支付
+     */
+    public Map<String, Object> createAlipayPayment(Integer orderId) {
+        Orders order = ordersMapper.selectById(orderId);
+        if (order == null || !"待支付".equals(order.getStatus())) {
+            return null;
+        }
+        String qrCode = alipayService.createPayment(
+                order.getOrderNo(),
+                order.getTotal().toString(),
+                "校园小卖部 - " + order.getOrderNo()
+        );
+        if (qrCode == null) {
+            return null;
+        }
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("qrCode", qrCode);
+        result.put("orderNo", order.getOrderNo());
+        result.put("total", order.getTotal());
+        return result;
+    }
+
+    /**
+     * 查询支付宝支付状态
+     */
+    public String queryPaymentStatus(Integer orderId) {
+        Orders order = ordersMapper.selectById(orderId);
+        if (order == null) {
+            return "FAIL";
+        }
+        // 如果已经是待接单状态（已支付），直接返回成功
+        if (!"待支付".equals(order.getStatus())) {
+            return "SUCCESS";
+        }
+        String status = alipayService.queryPayment(order.getOrderNo());
+        if ("SUCCESS".equals(status)) {
+            order.setPayType("支付宝");
+            order.setStatus("待接单");
+            ordersMapper.updateById(order);
+        }
+        return status;
+    }
+
+    /**
+     * 处理支付宝异步通知
+     */
+    public boolean processAlipayNotify(Map<String, String> params) {
+        String outTradeNo = params.get("out_trade_no");
+        String tradeStatus = params.get("trade_status");
+        if (outTradeNo == null || !"TRADE_SUCCESS".equals(tradeStatus)) {
+            return false;
+        }
+        // 查找订单并更新状态
+        Orders check = new Orders();
+        check.setOrderNo(outTradeNo);
+        List<Orders> list = ordersMapper.selectAll(check);
+        if (!list.isEmpty()) {
+            Orders order = list.get(0);
+            if ("待支付".equals(order.getStatus())) {
+                order.setPayType("支付宝");
+                order.setStatus("待接单");
+                ordersMapper.updateById(order);
+            }
+            return true;
+        }
+        return false;
     }
 
 }

@@ -14,7 +14,7 @@
     <name>springboot</name>
     <description>springboot</description>
     <properties>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
     </properties>
     <dependencies>
         <dependency>
@@ -74,6 +74,12 @@
             <version>4.4.0</version>
         </dependency>
 
+            <!-- 支付宝支付SDK -->
+        <dependency>
+            <groupId>com.alipay.sdk</groupId>
+            <artifactId>alipay-sdk-java</artifactId>
+            <version>4.39.74.ALL</version>
+        </dependency>
     </dependencies>
 
     <build>
