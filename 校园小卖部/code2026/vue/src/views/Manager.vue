@@ -90,6 +90,14 @@
               <span>管理员信息</span>
             </el-menu-item>
           </el-sub-menu>
+          <el-sub-menu index="forum">
+            <template #title>
+              <el-icon><ChatDotSquare /></el-icon>
+              <span>论坛管理</span>
+            </template>
+            <el-menu-item index="/manager/post">帖子管理</el-menu-item>
+            <el-menu-item index="/manager/reply">回复管理</el-menu-item>
+          </el-sub-menu>
           <el-menu-item index="/manager/person">
             <el-icon><User /></el-icon>
             <span>个人信息</span>

@@ -73,6 +73,7 @@
          <template #default="scope">
             <el-button @click="goPay(scope.row)" v-if="scope.row.status === '待支付'" type="warning" size="small">去支付</el-button>
             <el-button @click="cancel(scope.row)" v-if="scope.row.status === '待接单'" type="danger"> 取 消</el-button>
+            <el-button @click="done(scope.row)" v-if="scope.row.status === '已出货'|| scope.row.status ==='已配送'" type="primary">确认收货</el-button>
 
             
             <el-button @click="handleApplyRefund(scope.row)" v-if="scope.row.status === '待接单'|| scope.row.status === '已出货'|| scope.row.status === '已配送'|| scope.row.status === '已完成'" type="danger" size="small">申请售后</el-button>

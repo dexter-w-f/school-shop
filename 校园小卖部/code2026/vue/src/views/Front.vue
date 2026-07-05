@@ -14,6 +14,7 @@
             <el-menu-item  index='/front/goods'>精选商品</el-menu-item>
             <el-menu-item  index='/front/cart'>购物车</el-menu-item>
             <el-menu-item  index='/front/userOrders'>我的订单</el-menu-item>
+            <el-menu-item  index='/front/postList'>论坛</el-menu-item>
           </el-menu>
         </div>
            <div style="width: fit-content" v-if="router.currentRoute.value.path !== '/front/goods'">
@@ -30,7 +31,8 @@
             <el-dropdown-menu>
               <el-dropdown-item @click="router.push('/front/userCollect')">我的收藏</el-dropdown-item>
               <el-dropdown-item @click="router.push('/front/userComment')">我的评价</el-dropdown-item>
-                            <el-dropdown-item @click="router.push('/front/userRefund')">我的售后</el-dropdown-item>
+                                          <el-dropdown-item @click="router.push('/front/myPost')">我的帖子</el-dropdown-item>
+              <el-dropdown-item @click="router.push('/front/userRefund')">我的售后</el-dropdown-item>
               <el-dropdown-item @click="router.push('/front/person')">个人信息</el-dropdown-item>
               <el-dropdown-item @click="router.push('/front/password')">修改密码</el-dropdown-item>
               <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
@@ -153,5 +155,6 @@ const updateUser = () => {
   background-color: #9ec6bc !important;
 }
 </style>
+
 
 

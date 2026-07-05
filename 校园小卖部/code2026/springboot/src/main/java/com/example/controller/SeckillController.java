@@ -147,6 +147,10 @@ public class SeckillController {
         // 更新秒杀库存
         activity.setTotalStock(activity.getTotalStock() - 1);
         seckillActivityMapper.updateById(activity);
+        // 更新商品库存和销量
+        goods.setStore(goods.getStore() - 1);
+        goods.setSaleCount(goods.getSaleCount() + 1);
+        goodsMapper.updateById(goods);
 
         return Result.success(order.getId());
     }

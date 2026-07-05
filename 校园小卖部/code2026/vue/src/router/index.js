@@ -24,6 +24,8 @@ const router = createRouter({
         { path: 'comment', component: () => import('@/views/manager/Comment.vue')},
         { path: 'chatManage', component: () => import('@/views/manager/ChatManage.vue')},
         { path: 'refund', component: () => import('@/views/manager/Refund.vue')},
+        { path: 'post', component: () => import('@/views/manager/Post.vue')},
+        { path: 'reply', component: () => import('@/views/manager/Reply.vue')},
         { path: 'dataManager', component: () => import('@/views/manager/DataManager.vue')},
 
       ]
@@ -44,7 +46,11 @@ const router = createRouter({
               { path: 'userComment', component: () => import('@/views/front/UserComment.vue')},
               { path: 'compare', component: () => import('@/views/front/Compare.vue')},
               { path: 'payment', component: () => import('@/views/front/Payment.vue')},
-              { path: 'userRefund', component: () => import('@/views/front/UserRefund.vue')}
+              { path: 'userRefund', component: () => import('@/views/front/UserRefund.vue')},
+              { path: 'postList', component: () => import('@/views/front/PostList.vue')},
+              { path: 'postAdd', component: () => import('@/views/front/PostAdd.vue')},
+              { path: 'postDetail', component: () => import('@/views/front/PostDetail.vue')},
+              { path: 'myPost', component: () => import('@/views/front/MyPost.vue')}
           ]
       },
     { path: '/login', component: () => import('@/views/Login.vue') },

@@ -61,8 +61,8 @@
         <el-table-column label="配送信息" prop="deliver" width="150"></el-table-column>
         <el-table-column label="订单操作" align="center" width="160">
           <template #default="scope">
-            <el-button v-if="scope.row.deliverType === '自提'&& scope.row.status === '待接单'" type="primary" @click="out(scope.row)">出货</el-button>
-            <el-button v-if="scope.row.deliverType === '外送' && scope.row.status === '待接单'" type="primary" @click="handleDeliver(scope.row)">配送</el-button>
+            <el-button v-if="scope.row.status === '待接单'" type="primary" @click="out(scope.row)">出货</el-button>
+            
           </template>
         </el-table-column>
         <el-table-column label="删除" align="center" width="100">
