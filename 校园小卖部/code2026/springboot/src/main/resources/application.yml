@@ -29,7 +29,7 @@ fileBaseUrl: http://localhost
 
 # AI 客服 API 密钥
 ai:
-  api-key: sk-597720468cba47999073d9873bfe002a
+  api-key: #{ewwe232322}#
 
 
 # 支付宝沙箱配置（替换成你自己的沙箱参数）

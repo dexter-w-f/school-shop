@@ -9,6 +9,7 @@ import com.example.entity.SeckillActivity;
 import com.example.entity.User;
 import com.example.mapper.*;
 import com.example.service.OrdersService;
+import com.example.utils.RedisKeyUtils;
 import jakarta.annotation.Resource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,7 +67,7 @@ public class SeckillController {
     @DeleteMapping("/delete/{id}")
     public Result delete(@PathVariable Integer id) {
         seckillActivityMapper.deleteById(id);
-        redisTemplate.delete("seckill:stock:" + id);
+        redisTemplate.delete(RedisKeyUtils.seckillStockKey(id));
         return Result.success();
     }
 
@@ -114,14 +115,16 @@ public class SeckillController {
         if (goods.getStore() < 1) return Result.error("商品库存不足");
 
         // Redis 原子扣库存
-        String key = "seckill:stock:" + activityId;
+        String key = RedisKeyUtils.seckillStockKey(activityId);
         Boolean hasKey = redisTemplate.hasKey(key);
         if (Boolean.FALSE.equals(hasKey)) {
             redisTemplate.opsForValue().set(key, activity.getTotalStock());
+            redisTemplate.expire(key, RedisKeyUtils.seckillStockTtl(activity.getEndTime()));
         }
         Long stock = redisTemplate.opsForValue().decrement(key);
         if (stock == null || stock < 0) {
             redisTemplate.opsForValue().increment(key);
+            redisTemplate.expire(key, RedisKeyUtils.seckillStockTtl(activity.getEndTime()));
             seckillActivityMapper.updateById(activity);
             return Result.error("秒杀已结束");
         }
@@ -151,6 +154,10 @@ public class SeckillController {
         goods.setStore(goods.getStore() - 1);
         goods.setSaleCount(goods.getSaleCount() + 1);
         goodsMapper.updateById(goods);
+
+        if (Boolean.FALSE.equals(redisTemplate.getExpire(key))) {
+            redisTemplate.expire(key, RedisKeyUtils.seckillStockTtl(activity.getEndTime()));
+        }
 
         return Result.success(order.getId());
     }
