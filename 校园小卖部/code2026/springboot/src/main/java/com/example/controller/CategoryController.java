@@ -3,8 +3,10 @@ package com.example.controller;
 import com.example.common.Result;
 import com.example.entity.Category;
 import com.example.service.CategoryService;
+import com.example.utils.AdminControllerUtils;
 import com.github.pagehelper.PageInfo;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,11 +21,15 @@ public class CategoryController {
     @Resource
     private CategoryService categoryService;
 
+    @Resource
+    private HttpServletRequest request;
+
     /**
      * 新增
      */
     @PostMapping("/add")
     public Result add(@RequestBody Category category) {
+        AdminControllerUtils.requireAdmin(request);
         categoryService.add(category);
         return Result.success();
     }
@@ -33,6 +39,7 @@ public class CategoryController {
      */
     @DeleteMapping("/delete/{id}")
     public Result deleteById(@PathVariable Integer id) {
+        AdminControllerUtils.requireAdmin(request);
         categoryService.deleteById(id);
         return Result.success();
     }
@@ -42,6 +49,7 @@ public class CategoryController {
      */
     @PutMapping("/update")
     public Result updateById(@RequestBody Category category) {
+        AdminControllerUtils.requireAdmin(request);
         categoryService.updateById(category);
         return Result.success();
     }

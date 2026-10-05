@@ -3,8 +3,10 @@ package com.example.controller;
 import com.example.common.Result;
 import com.example.entity.Carousel;
 import com.example.service.CarouselService;
+import com.example.utils.AdminControllerUtils;
 import com.github.pagehelper.PageInfo;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,11 +21,15 @@ public class CarouselController {
     @Resource
     private CarouselService carouselService;
 
+    @Resource
+    private HttpServletRequest request;
+
     /**
      * 新增
      */
     @PostMapping("/add")
     public Result add(@RequestBody Carousel carousel) {
+        AdminControllerUtils.requireAdmin(request);
         carouselService.add(carousel);
         return Result.success();
     }
@@ -33,6 +39,7 @@ public class CarouselController {
      */
     @DeleteMapping("/delete/{id}")
     public Result deleteById(@PathVariable Integer id) {
+        AdminControllerUtils.requireAdmin(request);
         carouselService.deleteById(id);
         return Result.success();
     }
@@ -42,6 +49,7 @@ public class CarouselController {
      */
     @PutMapping("/update")
     public Result updateById(@RequestBody Carousel carousel) {
+        AdminControllerUtils.requireAdmin(request);
         carouselService.updateById(carousel);
         return Result.success();
     }

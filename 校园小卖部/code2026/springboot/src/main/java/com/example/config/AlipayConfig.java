@@ -6,9 +6,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.net.ssl.*;
-import java.security.cert.X509Certificate;
-
 @Configuration
 public class AlipayConfig {
 
@@ -33,7 +30,6 @@ public class AlipayConfig {
             System.out.println("【支付宝】沙箱未配置，使用模拟支付模式");
             return null;
         }
-        disableSSLValidation();
 
         com.alipay.api.AlipayConfig config = new com.alipay.api.AlipayConfig();
         config.setServerUrl(gatewayUrl);
@@ -56,26 +52,16 @@ public class AlipayConfig {
         }
 
     }
-    private void disableSSLValidation() {
-        try {
-            TrustManager[] trustAllCerts = new TrustManager[]{
-                new X509TrustManager() {
-                    public X509Certificate[] getAcceptedIssuers() { return null; }
-                    public void checkClientTrusted(X509Certificate[] certs, String authType) { }
-                    public void checkServerTrusted(X509Certificate[] certs, String authType) { }
-                }
-            };
-            SSLContext sc = SSLContext.getInstance("TLS");
-            sc.init(null, trustAllCerts, new java.security.SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-            HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
-        } catch (Exception e) {
-            System.err.println("【支付宝】SSL配置异常: " + e.getMessage());
-        }
-    }
 
     public String getReturnUrl() {
         return returnUrl;
+    }
+
+    /**
+     * 供回调验签使用（支付宝公钥）。
+     */
+    public String getAlipayPublicKey() {
+        return alipayPublicKey;
     }
 
     public boolean isConfigured() {

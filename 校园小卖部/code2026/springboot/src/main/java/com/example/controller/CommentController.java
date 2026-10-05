@@ -1,10 +1,12 @@
 package com.example.controller;
 
 import com.example.common.Result;
+import com.example.config.AuthValidator;
 import com.example.entity.Comment;
 import com.example.service.CommentService;
 import com.github.pagehelper.PageInfo;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,29 +21,44 @@ public class CommentController {
     @Resource
     private CommentService commentService;
 
+    @Resource
+    private HttpServletRequest request;
+
     /**
-     * 新增
+     * 新增（评论人必须是当前登录用户）
      */
     @PostMapping("/add")
     public Result add(@RequestBody Comment comment) {
+        comment.setUserId(AuthValidator.requireUserId(request));
         commentService.add(comment);
         return Result.success();
     }
 
     /**
-     * 删除
+     * 删除（管理员或评论作者本人）
      */
     @DeleteMapping("/delete/{id}")
     public Result deleteById(@PathVariable Integer id) {
+        Comment db = commentService.selectById(id);
+        if (db == null) {
+            return Result.error("评论不存在");
+        }
+        AuthValidator.requireAdminOrOwner(request, db.getUserId());
         commentService.deleteById(id);
         return Result.success();
     }
 
     /**
-     * 修改
+     * 修改（管理员或评论作者本人）
      */
     @PutMapping("/update")
     public Result updateById(@RequestBody Comment comment) {
+        Comment db = commentService.selectById(comment.getId());
+        if (db == null) {
+            return Result.error("评论不存在");
+        }
+        AuthValidator.requireAdminOrOwner(request, db.getUserId());
+        comment.setUserId(db.getUserId());
         commentService.updateById(comment);
         return Result.success();
     }

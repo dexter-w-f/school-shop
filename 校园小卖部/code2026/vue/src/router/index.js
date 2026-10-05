@@ -58,8 +58,37 @@ const router = createRouter({
 
   ]
 })
-router.beforeEach(() => {
+router.beforeEach((to) => {
     window.scroll({top:0,behavior:'smooth'})
+
+    let user = {}
+    try {
+        user = JSON.parse(localStorage.getItem('system-user') || '{}')
+    } catch (e) {
+        user = {}
+    }
+
+    // 登录/注册页直接放行
+    if (to.path === '/login' || to.path === '/register') {
+        return true
+    }
+
+    // 未登录一律回到登录页
+    if (!user.token) {
+        return '/login'
+    }
+
+    // 管理端仅管理员可进入
+    if (to.path.startsWith('/manager') && user.role !== '管理员') {
+        return '/front/home'
+    }
+
+    // 用户端仅普通用户可进入（管理员没有购物车/订单等用户数据）
+    if (to.path.startsWith('/front') && user.role === '管理员') {
+        return '/manager/home'
+    }
+
+    return true
 })
 
 export default router

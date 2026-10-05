@@ -3,8 +3,10 @@ package com.example.controller;
 import com.example.common.Result;
 import com.example.entity.Goods;
 import com.example.service.GoodsService;
+import com.example.utils.AdminControllerUtils;
 import com.github.pagehelper.PageInfo;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,11 +21,15 @@ public class GoodsController {
     @Resource
     private GoodsService goodsService;
 
+    @Resource
+    private HttpServletRequest request;
+
     /**
      * 新增
      */
     @PostMapping("/add")
     public Result add(@RequestBody Goods goods) {
+        AdminControllerUtils.requireAdmin(request);
         goodsService.add(goods);
         return Result.success();
     }
@@ -33,6 +39,7 @@ public class GoodsController {
      */
     @DeleteMapping("/delete/{id}")
     public Result deleteById(@PathVariable Integer id) {
+        AdminControllerUtils.requireAdmin(request);
         goodsService.deleteById(id);
         return Result.success();
     }
@@ -42,6 +49,7 @@ public class GoodsController {
      */
     @PutMapping("/update")
     public Result updateById(@RequestBody Goods goods) {
+        AdminControllerUtils.requireAdmin(request);
         goodsService.updateById(goods);
         return Result.success();
     }

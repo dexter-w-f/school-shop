@@ -332,9 +332,14 @@ public class OrdersService {
     }
 
     /**
-     * 处理支付宝异步通知
+     * 处理支付宝异步通知。
+     * 必须先通过 RSA2 验签，否则任何人都能伪造回调把订单置为已支付。
      */
     public boolean processAlipayNotify(Map<String, String> params) {
+        if (!alipayService.verifyNotify(params)) {
+            System.err.println("【支付宝】异步通知验签失败，已拒绝");
+            return false;
+        }
         String outTradeNo = params.get("out_trade_no");
         String tradeStatus = params.get("trade_status");
         if (outTradeNo == null || !"TRADE_SUCCESS".equals(tradeStatus)) {
@@ -346,6 +351,19 @@ public class OrdersService {
         List<Orders> list = ordersMapper.selectAll(check);
         if (!list.isEmpty()) {
             Orders order = list.get(0);
+            // 校验回调金额与订单金额一致，防止改价回调
+            String notifyAmount = params.get("total_amount");
+            if (notifyAmount != null && order.getTotal() != null) {
+                try {
+                    if (new BigDecimal(notifyAmount).compareTo(order.getTotal()) != 0) {
+                        System.err.println("【支付宝】异步通知金额不一致，已拒绝: " + notifyAmount + " != " + order.getTotal());
+                        return false;
+                    }
+                } catch (NumberFormatException e) {
+                    System.err.println("【支付宝】异步通知金额格式非法，已拒绝: " + notifyAmount);
+                    return false;
+                }
+            }
             if ("待支付".equals(order.getStatus())) {
                 ordersMapper.updateStatusIfPending(order.getId(), "待接单", "支付宝");
             }

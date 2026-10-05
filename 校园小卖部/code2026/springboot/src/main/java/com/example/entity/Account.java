@@ -15,6 +15,8 @@ public class Account {
     private String role;
     /** 新密码 */
     private String newPassword;
+    /** 原密码（修改密码时用于校验） */
+    private String oldPassword;
    /** 头像 */
    private String avatar;
     /** token */
@@ -76,6 +78,14 @@ public class Account {
 
     public void setNewPassword(String newPassword) {
         this.newPassword = newPassword;
+    }
+
+    public String getOldPassword() {
+        return oldPassword;
+    }
+
+    public void setOldPassword(String oldPassword) {
+        this.oldPassword = oldPassword;
     }
 
     public String getAvatar() {

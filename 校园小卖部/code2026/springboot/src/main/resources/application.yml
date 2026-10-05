@@ -1,21 +1,21 @@
 server:
   port: 9090
 
-# 数据库配置
+# 数据库配置（口令请用环境变量 DB_PASSWORD 提供，不要写死在仓库里）
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: 123456
-    url: jdbc:mysql://localhost:3306/shop?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true&useSSL=false&serverTimezone=GMT%2b8&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456}
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:shop}?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true&useSSL=false&serverTimezone=GMT%2b8&allowPublicKeyRetrieval=true
   servlet:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
       timeout: 3000ms
 
 # 配置mybatis实体和xml映射
@@ -25,22 +25,27 @@ mybatis:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
 
-fileBaseUrl: http://localhost
+fileBaseUrl: ${FILE_BASE_URL:http://localhost}
 
-# AI 客服 API 密钥
+# AI 客服 API 密钥（用环境变量 AI_API_KEY 提供，不要提交真实密钥）
 ai:
-  api-key: #{ewwe232322}#
+  api-key: ${AI_API_KEY:}
+
+# 验证码邮件脚本（可选；留空则回退到 ../vue/email-sender.js）
+captcha:
+  script-path: ${CAPTCHA_SCRIPT_PATH:}
+  node-path: ${CAPTCHA_NODE_PATH:node}
 
 
-# 支付宝沙箱配置（替换成你自己的沙箱参数）
+# 支付宝沙箱配置（私钥/公钥只从环境变量读取，不要提交到仓库）
 alipay:
   # 沙箱环境的AppID
-  app-id: 9021000165635352
-  # 应用私钥（PKCS8格式，不含-----BEGIN/END-----）
-  app-private-key: MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCgOgix5vPjpJXFyjeYanMJlrOL2lNBJnRG1VKf7IenmRf0S9vAo+7kUxo6gzzTXrvAoF5lDSgg4dSSA6qgBwDTgo6N+FfWrI9vf5hKkjcYu3ZFOr89A+9flBHrQ0kPALTJAZrb4bkhEBwPOtpI3W+ivsGuot27nu6B2DAZREy4nuX0dJppDseRs2/H+Q1P+id+B13H+SATTdGQOr4gfQeFFzd9sOsICSN85HIlib1cOax7kvndvf+I6kR058ABKpY03oU0F2oYcXdGLBMjLT6OAyZwof9ohPoCcm3bh0s3nmBzwML8PtzgML00OeFgjV1PWvnTr4qU0G+hdyAKDORdAgMBAAECggEBAIbKa5gl/5TJV8ot5PlOy/oMEn2brKBJVlZkjX7GQBTJYPJ+gp8cChOAqbcBwsDamD5jayW9nL2U3fv8I6U+Xv6QfZaHjnWlc4FMKPTK7pja05NH6avNzKluamitkR+S64OR2xIRYWmkIMbbLtlPl+OkcFGW58w31tPa6BPJdnV0t8nJVP9A7rNi2ss0m6ddJZh3mHqbEdpMKbIAgjydy9xT/ViGsc9tTmovT07G03ZQOpxmvkij7Gycqei+gYXX1/jbOL7fkaMom2JyPOnrxtWCwyK2tIR6ROSHkM9lj1ui8xnOO4LjoDMhqPcGrmuZKZd7Bsaap90UyutY3IqFKc0CgYEA5nPqL8wx+Tbdr8dIL7eTtO8Am9Hiw2pK5e6CkVnd8Vr6dXYNYwLUz1aFW1F/Jes8Tr69kJpwC4T1jevRwe8S5EBA2fPQBZ89XP6E6hMYnCAF8LqVHR4qoO8IJmwpYtKkOYQlyMscuEY2JXxF7+vSsk4UX07X+b+KrpPB1eSXTgMCgYEAsf0nH/DbFpgVFrKihebZlohCnDqPTxc5oMaqVQJ234yaOMyBhtmCoAPHrqeyc3Wr7pjPI7fZzhFZ+gnDpFnTUYnXh/riDxpJ0SIrUktzlQl3wgQa8C2BRpsMiJXoxtAku4cjc8Rv9IyF8Cp6MX7MPfe2W5XJxK59CsZcJwNiJh8CgYAg3+ZHfUSfvZDwU2hbzj9W70VR9SX5JH+cv2KG46ACnyzddsLAHhZHoZsShNSzjxQiU5ltOGrFaekxnrNki/tQ7k2SCfLh6m5xhqllTuYS14qhZayB49zG6nJqMMHSpCPjRJOzSi5Fp1ZwEINVj3mWEAdd9TxgF0/sSY28OojPCwKBgQCRlrg1GUesUJQXb+Ee1DixOB38Oq5UjHPX/gj/5jckHpdb1HQywKJnjw/73jJK3TrYvOfamJ0xQOIvc2MzgUIoVS8WjHHy1pcA2QlElHEjvI3YBpGeWip/fX4gDzdLwJ/7QMwP+uN0zqkUTTqMV+Jq4b+pZHmZRv0DHkPsqYjUEwKBgQCLykU/Qlolhb33lzStWSZw44FcHlMrXJc+6j50NJisHt8SKNUBJvnUQfE+uDwjuZOeGxSZlGKzltC8G3vKcyaB4FcgdbPwuv6zHvtmRlTgeZrH8LCjuxZE4pe1P50tGQ/y2iRK1HSMGCXmH0i8h3SZGnP3ZtB5E/ZoIPdHxOuevQ==
-  # 支付宝公钥（沙箱环境的支付宝公钥）
-  alipay-public-key: MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjfuUvQvUbM4zW3nQA1T+oD2h9+qACbFdpyQKg82R3RbEeOJbaVku6QkdAJFjn6wDmjT6tu6Oi/MduYwvAFsfJsTgFtY39vh62KT5YAZ+paLEy7KR91NFha2tip0bvXuhXvOM5F8ycDavkCeGCeI3mfofUpVZ/BgXOi112j7ny1LKbAXbZOeP7LeG21RHjkLhbz2OYfNweeyl/VOqrc0osFHQUgKc1vAoaRS/j3E0Sd5313mJMiVvrEZo7IpwoFE6UnPNDln7Nw6oGdXwEVYVso+cto9xGOyn7ojJHjvONxS1K6a2RObynuclE8h+YaFL17HQm1+5DUOoH2vdxZNFlQIDAQAB
+  app-id: ${ALIPAY_APP_ID:your_sandbox_app_id}
+  # 应用私钥（PKCS8格式，不含-----BEGIN/END-----），通过 ALIPAY_APP_PRIVATE_KEY 提供
+  app-private-key: ${ALIPAY_APP_PRIVATE_KEY:}
+  # 支付宝公钥（沙箱环境的支付宝公钥），通过 ALIPAY_PUBLIC_KEY 提供
+  alipay-public-key: ${ALIPAY_PUBLIC_KEY:}
   # 沙箱网关地址
-  gateway-url: https://openapi-sandbox.dl.alipaydev.com/gateway.do
+  gateway-url: ${ALIPAY_GATEWAY_URL:https://openapi-sandbox.dl.alipaydev.com/gateway.do}
   # 支付后回跳地址（前端页面）
-  return-url: http://localhost:5173/#/front/userOrders
+  return-url: ${ALIPAY_RETURN_URL:http://localhost:5173/#/front/userOrders}

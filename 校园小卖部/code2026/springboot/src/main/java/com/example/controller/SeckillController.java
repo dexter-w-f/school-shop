@@ -197,10 +197,8 @@ public class SeckillController {
     }
 
     private static void requireAdmin(HttpServletRequest request) {
-        String role = request.getHeader("X-Current-Role");
-        if (!"管理员".equals(role)) {
-            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "无管理员权限");
-        }
+        // 角色以服务端 token 为准，不信任客户端请求头
+        com.example.utils.AdminControllerUtils.requireAdmin(request);
     }
 }
 

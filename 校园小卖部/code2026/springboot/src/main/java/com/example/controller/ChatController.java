@@ -47,10 +47,12 @@ public class ChatController {
     private ChatMessageMapper chatMessageMapper;
 
     @PostMapping("/send")
-    public Result send(@RequestBody Map<String, String> params) {
+    public Result send(@RequestBody Map<String, String> params, jakarta.servlet.http.HttpServletRequest request) {
         String question = params.get("question");
         String historyJson = params.get("history");
-        String userIdStr = params.get("userId");
+        // 用户身份一律取自登录会话，忽略请求体传入的 userId，避免被用来读取他人余额/订单
+        Integer sessionUserId = com.example.config.AuthValidator.requireUserId(request);
+        String userIdStr = sessionUserId == null ? null : String.valueOf(sessionUserId);
         if (question == null || question.trim().isEmpty()) {
             return Result.error("请输入问题");
         }
@@ -61,14 +63,14 @@ public class ChatController {
         List<Goods> goodsList = goodsMapper.selectAll(query);
         String goodsContext = goodsList.stream()
                 .map(g -> "- " + g.getName() + " (￥" + g.getPrice() + ", 库存" + g.getStore() + ")")
-                .collect(Collectors.joining("\n"));
+                .collect(Collectors.joining(""+System.lineSeparator()+""));
         String systemPrompt = "你是一个校园小卖部的在线客服助手，叫\"小卖部助手\"。"
                 + "你热情友好，回答简洁，帮学生解决商品咨询、订单问题、配送问题等。"
-                + "回复控制在100字以内，口语化，适当用表情。如用户查询订单或账户信息，请根据下方提供的用户数据如实回答。\n\n"
-                + "【店铺信息】\n- 名称: 校园小卖部\n- 营业时间: 每天 8:00-22:00\n- 配送方式: 到店自提（免费）/ 外送（满20元免配送费）\n"
-                + "- 地址: 校园内\n\n"
-                + "【售后政策】\n- 商品质量问题可退换\n- 非质量问题不影响二次销售可退\n- 退换请联系管理员\n\n"
-                + "【在售商品】（请只推荐以下商品，不要推荐不存在商品）:\n" + goodsContext;
+                + "回复控制在100字以内，口语化，适当用表情。如用户查询订单或账户信息，请根据下方提供的用户数据如实回答。"+System.lineSeparator()+""+System.lineSeparator()+""
+                + "【店铺信息】"+System.lineSeparator()+"- 名称: 校园小卖部"+System.lineSeparator()+"- 营业时间: 每天 8:00-22:00"+System.lineSeparator()+"- 配送方式: 到店自提(免费)/ 外送(满20元免配送费)"+System.lineSeparator()+""
+                + "- 地址: 校园内"+System.lineSeparator()+""+System.lineSeparator()+""
+                + "【售后政策】"+System.lineSeparator()+"- 商品质量问题可退换"+System.lineSeparator()+"- 非质量问题不影响二次销售可退"+System.lineSeparator()+"- 退换请联系管理员"+System.lineSeparator()+""+System.lineSeparator()+""
+                + "【在售商品】(请只推荐以下商品，不要推荐不存在商品):"+System.lineSeparator()+"" + goodsContext;
 
         // 获取用户上下文信息
         String userContext = "";
@@ -77,16 +79,16 @@ public class ChatController {
                 Integer userId = Integer.valueOf(userIdStr);
                 User user = userMapper.selectById(userId);
                 if (user != null) {
-                    userContext += "\n\n当前用户信息:\n- 账户余额: ￥" + user.getAccount() + "\n- 用户名: " + user.getName();
+                    userContext += ""+System.lineSeparator()+""+System.lineSeparator()+"当前用户信息:"+System.lineSeparator()+"- 账户余额: ￥" + user.getAccount() + ""+System.lineSeparator()+"- 用户名: " + user.getName();
 
                     // 获取用户最近订单
                     Orders orderQuery = new Orders();
                     orderQuery.setUserId(userId);
                     List<Orders> orderList = ordersService.selectAll(orderQuery);
                     if (orderList != null && !orderList.isEmpty()) {
-                        userContext += "\n- 近期订单:\n";
+                        userContext += ""+System.lineSeparator()+"- 近期订单:"+System.lineSeparator()+"";
                         for (Orders o : orderList.stream().collect(Collectors.toList())) {
-                            userContext += "  订单#" + o.getOrderNo() + ": " + o.getStatus() + ", ￥" + o.getTotal() + ", " + o.getTime() + "\n";
+                            userContext += "  订单#" + o.getOrderNo() + ": " + o.getStatus() + ", ￥" + o.getTotal() + ", " + o.getTime() + ""+System.lineSeparator()+"";
                         }
                     }
                 }
@@ -148,6 +150,7 @@ public class ChatController {
         }
     }
 }
+
 
 
 

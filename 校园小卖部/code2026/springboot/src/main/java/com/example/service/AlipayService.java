@@ -1,24 +1,55 @@
 package com.example.service;
 
 import com.alipay.api.AlipayClient;
+import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.api.request.AlipayTradePrecreateRequest;
 import com.alipay.api.request.AlipayTradeQueryRequest;
 import com.alipay.api.request.AlipayTradeRefundRequest;
 import com.alipay.api.response.AlipayTradePrecreateResponse;
 import com.alipay.api.response.AlipayTradeQueryResponse;
 import com.alipay.api.response.AlipayTradeRefundResponse;
+import cn.hutool.json.JSONObject;
 import com.example.config.AlipayConfig;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 public class AlipayService {
 
-    @Resource
+    /**
+     * 未配置支付宝沙箱时 AlipayConfig#alipayClient 会返回 null，
+     * 因此这里必须用 required=false，否则应用无法启动。
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
     private AlipayClient alipayClient;
 
     @Resource
     private AlipayConfig alipayConfig;
+
+    /**
+     * 校验支付宝异步通知签名（RSA2）。
+     * 验签失败一律视为伪造回调。
+     */
+    public boolean verifyNotify(Map<String, String> params) {
+        if (params == null || params.isEmpty() || !alipayConfig.isConfigured()) {
+            return false;
+        }
+        if (params.get("sign") == null || params.get("sign_type") == null) {
+            return false;
+        }
+        try {
+            return AlipaySignature.rsaCheckV1(
+                    params,
+                    alipayConfig.getAlipayPublicKey(),
+                    "UTF-8",
+                    params.get("sign_type"));
+        } catch (Exception e) {
+            System.err.println("【支付宝】回调验签异常: " + e.getMessage());
+            return false;
+        }
+    }
 
     /**
      * 创建支付宝支付（生成二维码内容）
@@ -29,9 +60,11 @@ public class AlipayService {
         }
         try {
             AlipayTradePrecreateRequest request = new AlipayTradePrecreateRequest();
-            request.setBizContent("{\"out_trade_no\":\"" + orderNo
-                    + "\",\"total_amount\":\"" + amount
-                    + "\",\"subject\":\"" + subject + "\"}");
+            JSONObject biz = new JSONObject();
+            biz.set("out_trade_no", orderNo);
+            biz.set("total_amount", amount);
+            biz.set("subject", subject);
+            request.setBizContent(biz.toString());
             AlipayTradePrecreateResponse response = alipayClient.execute(request);
             if (response.isSuccess()) {
                 return response.getQrCode();
@@ -82,8 +115,10 @@ public class AlipayService {
         }
         try {
             AlipayTradeRefundRequest request = new AlipayTradeRefundRequest();
-            request.setBizContent("{\"out_trade_no\":\"" + orderNo
-                    + "\",\"refund_amount\":\"" + amount + "\"}");
+            JSONObject biz = new JSONObject();
+            biz.set("out_trade_no", orderNo);
+            biz.set("refund_amount", amount);
+            request.setBizContent(biz.toString());
             AlipayTradeRefundResponse response = alipayClient.execute(request);
             if (response.isSuccess()) {
                 System.out.println("【支付宝】退款成功: " + orderNo + ", 金额: " + amount);
