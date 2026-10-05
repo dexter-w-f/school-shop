@@ -132,11 +132,19 @@ public class OrdersService {
   @Transactional
   public void updateById(Orders orders, boolean allowManageStatus) {
       Orders current = ordersMapper.selectById(orders.getId());
-       if (current == null || "已取消".equals(current.getStatus()) || "已完成".equals(current.getStatus())) {
-           return;
+       if (current == null) {
+           throw new CustomException("订单不存在");
        }
        String target = orders.getStatus();
        if (target == null || target.isBlank()) {
+           return;
+       }
+       // 终态订单：明确拒绝"取消已完成/已取消订单"这类请求，
+       // 避免接口返回成功但实际什么都没改（误导前端）。
+       if ("已取消".equals(current.getStatus()) || "已完成".equals(current.getStatus())) {
+           if ("已取消".equals(target)) {
+               throw new CustomException("订单已是终态，无法取消");
+           }
            return;
        }
        if ("已取消".equals(target)) {
