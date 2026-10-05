@@ -27,10 +27,18 @@ public class OrdersController {
     private HttpServletRequest request;
 
     /**
-     * 新增
+     * 新增订单。
+     * 普通用户强制以下单会话的身份下单（防止替他人下单、扣他人商品库存）；
+     * 管理员可显式指定 userId（用于代客下单）。
      */
     @PostMapping("/add")
     public Result add(@RequestBody Orders orders) {
+        Integer currentUserId = AuthValidator.requireUserId(request);
+        if (!AdminControllerUtils.isAdmin(request)) {
+            orders.setUserId(currentUserId);
+        } else if (orders.getUserId() == null) {
+            orders.setUserId(currentUserId);
+        }
         ordersService.add(orders);
         return Result.success(orders.getId());
     }

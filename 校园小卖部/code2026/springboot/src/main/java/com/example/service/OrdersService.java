@@ -161,11 +161,23 @@ public class OrdersService {
                    throw new CustomException("该订单已有售后申请，请通过售后流程处理");
                }
            }
+           // 关键：先用条件更新"抢占"状态到「已取消」，再执行退款与回补库存。
+           // 否则两个并发的取消请求会同时通过上面的状态校验，各自退一次款、各回补一次库存。
+           int claimed = ordersMapper.updateStatusToCancelledIfNotFinished(current.getId(), "已取消");
+           if (claimed == 0) {
+               throw new CustomException("订单状态已变更，请刷新后重试");
+           }
+
            Integer userId = current.getUserId();
            User user = userMapper.selectById(userId);
-           // 仅余额支付的订单需要退回余额；支付宝/微信等已在支付渠道退回，退到余额会造成重复退款
-           boolean wasPaidByBalance = "余额支付".equals(current.getPayType());
-           if (wasPaidByBalance && user != null) {
+           // 退款渠道判断：
+           // - pay_type 为「余额支付」或为空（下单时尚未记录支付方式）→ 退回余额；
+           // - pay_type 明确为支付宝/微信等第三方渠道 → 不回退余额，避免与渠道退款叠加成重复退款。
+           // 注意：若只判断 equals("余额支付")，会把 pay_type 为 NULL 的订单也漏掉，
+           // 导致用户取消订单后钱既不退余额、也不走渠道，等于白扣。
+           String payType = current.getPayType();
+           boolean thirdPartyPaid = payType != null && !payType.isBlank() && !"余额支付".equals(payType);
+           if (!thirdPartyPaid && user != null && !"待支付".equals(current.getStatus())) {
                user.setAccount(user.getAccount().add(current.getTotal()));
                userMapper.updateById(user);
            }
@@ -176,15 +188,9 @@ public class OrdersService {
                orderDetailList = orderDetailMapper.selectAll(query);
            }
            for (OrderDetail detail : orderDetailList) {
-               Integer goodsId = detail.getGoodsId();
-               Goods goods = goodsMapper.selectById(goodsId);
-               if (goods != null) {
-                   goods.setStore(goods.getStore() + detail.getNum());
-                   goods.setSaleCount(goods.getSaleCount() - detail.getNum());
-                   goodsMapper.updateById(goods);
-               }
+               // 原子回补库存，避免并发下"读取-修改-写回"丢失更新
+               goodsMapper.updateStoreRestore(detail.getGoodsId(), detail.getNum());
            }
-           ordersMapper.updateStatusToCancelledIfNotFinished(current.getId(), "已取消");
            return;
        }
 

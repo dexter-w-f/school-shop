@@ -39,4 +39,10 @@ public interface GoodsMapper {
 
     int updateStoreDeduct(@Param("id") Integer id, @Param("num") Integer num);
 
+    /**
+     * 原子回补库存并扣减销量（取消/退款回滚库存用）。
+     * 用 SQL 原子操作替代"读取-修改-写回"，避免并发下丢失更新。
+     */
+    int updateStoreRestore(@Param("id") Integer id, @Param("num") Integer num);
+
 }

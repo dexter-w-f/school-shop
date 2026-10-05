@@ -107,4 +107,8 @@
         update `goods` set store = store - #{num}, sale_count = sale_count + #{num}
         where id = #{id} and store >= #{num}
     </update>
+    <update id="updateStoreRestore">
+        update `goods` set store = store + #{num}, sale_count = sale_count - #{num}
+        where id = #{id}
+    </update>
 </mapper>

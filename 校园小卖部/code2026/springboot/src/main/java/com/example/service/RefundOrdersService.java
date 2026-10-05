@@ -1,7 +1,6 @@
 package com.example.service;
 
 import cn.hutool.core.date.DateUtil;
-import com.example.entity.Goods;
 import com.example.entity.OrderDetail;
 import com.example.entity.Orders;
 import com.example.entity.RefundOrders;
@@ -190,17 +189,12 @@ public class RefundOrdersService {
         if (order != null && !"已完成".equals(order.getStatus()) && !"已取消".equals(order.getStatus())) {
             int orderUpdated = ordersMapper.updateStatusToCancelledIfNotFinished(order.getId(), "已取消");
             if (orderUpdated > 0) {
-                // 恢复库存：加回库存、扣减销量
+                // 恢复库存：原子回补，避免并发下"读取-修改-写回"丢失更新
                 OrderDetail detailParam2 = new OrderDetail();
                 detailParam2.setOrderId(order.getId());
                 List<OrderDetail> detailList2 = orderDetailMapper.selectAll(detailParam2);
                 for (OrderDetail detail : detailList2) {
-                    Goods goods = goodsMapper.selectById(detail.getGoodsId());
-                    if (goods != null) {
-                        goods.setStore(goods.getStore() + detail.getNum());
-                        goods.setSaleCount(goods.getSaleCount() - detail.getNum());
-                        goodsMapper.updateById(goods);
-                    }
+                    goodsMapper.updateStoreRestore(detail.getGoodsId(), detail.getNum());
                 }
             }
         }
