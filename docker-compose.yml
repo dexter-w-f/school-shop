@@ -51,6 +51,10 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: 123456
       SPRING_DATA_REDIS_HOST: redis
+      # 必须显式指定 6379：application.yml 里的默认端口是给本机开发用的 16379
+      # （本机 Windows 保留了 6317-6416 端口段，含 6379，无法绑定）。
+      # 容器内网走标准 6379。
+      REDIS_PORT: 6379
       # 可选：不配置则支付宝/邮件/AI 客服不可用（会走模拟支付，不影响启动）
       # AI_API_KEY: ""
       # ALIPAY_APP_ID: ""

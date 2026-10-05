@@ -14,8 +14,11 @@ spring:
       max-request-size: 100MB
   data:
     redis:
+      # 本机 Windows 保留了 6317-6416 端口段（含 6379），无法绑定 6379，
+      # 因此本机开发把 Redis 容器映射到宿主 16379（docker run -p 16379:6379）。
+      # 容器/服务器内网按标准 6379 部署时，用环境变量 REDIS_PORT=6379 覆盖即可。
       host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      port: ${REDIS_PORT:16379}
       timeout: 3000ms
 
 # 配置mybatis实体和xml映射
