@@ -60,4 +60,19 @@
             <if test="status != null">status = #{status},</if>
         </set> where id = #{id}
     </update>
+    <update id="incrementViewCount">
+        update `post` set view_count = ifnull(view_count, 0) + 1 where id = #{id}
+    </update>
+    <update id="incrementLikeCount">
+        update `post` set like_count = ifnull(like_count, 0) + 1 where id = #{id}
+    </update>
+    <update id="decrementLikeCount">
+        update `post` set like_count = greatest(ifnull(like_count, 0) - 1, 0) where id = #{id}
+    </update>
+    <update id="incrementReplyCount">
+        update `post` set reply_count = ifnull(reply_count, 0) + 1 where id = #{id}
+    </update>
+    <update id="decrementReplyCount">
+        update `post` set reply_count = greatest(ifnull(reply_count, 0) - 1, 0) where id = #{id}
+    </update>
 </mapper>

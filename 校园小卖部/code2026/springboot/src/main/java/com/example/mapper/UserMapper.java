@@ -2,11 +2,12 @@ package com.example.mapper;
 
 
 import com.example.entity.User;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
 public interface UserMapper {
-    List<User> selectAll(String name);
+    List<User> selectAll(@Param("name") String name);
     void deleteById(Integer id);
 
     void insert(User user);

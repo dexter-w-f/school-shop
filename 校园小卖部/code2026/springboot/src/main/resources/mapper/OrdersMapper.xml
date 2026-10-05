@@ -99,4 +99,50 @@
         order by id asc
     </select>
 
+    <select id="selectTimeoutUnfinishedOrders" resultType="com.example.entity.Orders">
+        select * from `orders`
+        where status not in ('待支付', '已完成', '已取消')
+        and time &lt; #{deadline}
+        order by id asc
+    </select>
+
+    <update id="updateStatusIfPending">
+        update `orders`
+        set status = #{status}, pay_type = #{payType}
+        where id = #{id} and status = '待支付'
+    </update>
+
+    <update id="updateStatusToCancelledIfNotFinished">
+        update `orders`
+        set status = #{status}
+        where id = #{id} and status not in ('已完成', '已取消')
+    </update>
+
+    <!-- 仅当订单仍处于 fromStatus 时才流转到 status，避免并发下重复流转 -->
+    <update id="updateStatusFrom">
+        update `orders`
+        set status = #{status}
+        where id = #{id} and status = #{fromStatus}
+    </update>
+
+    <update id="updateTotalAndOrderNoById" parameterType="com.example.entity.Orders">
+        update `orders`
+        <set>
+            <if test="orderNo != null">order_no = #{orderNo},</if>
+            <if test="total != null">total = #{total},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="sumTotal" resultType="java.math.BigDecimal">
+        select ifnull(sum(total), 0) from `orders` where status != '已取消'
+    </select>
+
+    <select id="sumTotalByTime" resultType="java.math.BigDecimal">
+        select ifnull(sum(total), 0) from `orders`
+        where status != '已取消'
+          and time &gt;= #{startTime}
+          and time &lt; #{endTime}
+    </select>
+
 </mapper>

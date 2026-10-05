@@ -21,7 +21,8 @@ public class SeckillRedisStartupInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        redisTemplate.execute((RedisConnection connection) -> {
+        try {
+            redisTemplate.execute((RedisConnection connection) -> {
             String pattern = "seckill:stock:*";
 
             try (var cursor = connection.scan(org.springframework.data.redis.core.ScanOptions.scanOptions().match(pattern).count(1000).build())) {
@@ -49,5 +50,10 @@ public class SeckillRedisStartupInitializer implements CommandLineRunner {
 
             return null;
         });
+        } catch (Exception e) {
+            // Redis 不可用时不应阻断应用启动：秒杀库存 key 的 TTL 兜底是可选的维护动作，
+            // 秒杀接口自身会在缺少 key 时按数据库库存重新初始化。
+            System.err.println("[Seckill] Redis 启动初始化跳过（Redis 不可用）: " + e.getMessage());
+        }
     }
 }

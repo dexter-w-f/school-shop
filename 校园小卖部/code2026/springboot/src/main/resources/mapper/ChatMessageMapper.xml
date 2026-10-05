@@ -1,17 +1,37 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.mapper.ChatMessageMapper">
+
+    <resultMap id="chatMessageResultMap" type="com.example.entity.ChatMessage">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="question" column="question"/>
+        <result property="answer" column="answer"/>
+        <result property="time" column="time"/>
+    </resultMap>
+
+    <!-- chat_message 表没有 user_name 列，用户名通过 join user 取得 -->
     <insert id="insert" parameterType="com.example.entity.ChatMessage" useGeneratedKeys="true" keyProperty="id">
-        insert into chat_message(user_id, question, answer, time) values(#{userId}, #{question}, #{answer}, #{time})
+        insert into chat_message (user_id, question, answer, time)
+        values (#{userId}, #{question}, #{answer}, #{time})
     </insert>
-    <select id="selectByUserId" resultType="com.example.entity.ChatMessage">
-        select * from chat_message where user_id = #{userId} order by time asc
+
+    <select id="selectByUserId" resultMap="chatMessageResultMap">
+        select c.id, c.user_id, u.name as user_name, c.question, c.answer, c.time
+        from chat_message c
+        left join `user` u on u.id = c.user_id
+        where c.user_id = #{userId}
+        order by c.id desc
     </select>
-    <select id="selectSessions" resultType="java.util.LinkedHashMap">
-        SELECT cm.user_id as userId, u.name as userName, count(*) as messageCount,
-          (SELECT question FROM chat_message WHERE user_id = cm.user_id ORDER BY id DESC LIMIT 1) as lastQuestion,
-          (SELECT time FROM chat_message WHERE user_id = cm.user_id ORDER BY id DESC LIMIT 1) as lastTime
-        FROM chat_message cm LEFT JOIN user u ON cm.user_id = u.id
-        GROUP BY cm.user_id ORDER BY lastTime DESC
+
+    <select id="selectSessions" resultType="map">
+        select c.user_id, u.name as user_name, max(c.id) as message_id, max(c.time) as last_time
+        from chat_message c
+        left join `user` u on u.id = c.user_id
+        group by c.user_id, u.name
+        order by last_time desc
     </select>
 </mapper>

@@ -2,9 +2,11 @@ package com.example.mapper;
 
 import com.example.entity.OrderDetail;
 import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 操作orderDetail相关数据接口
@@ -38,4 +40,6 @@ public interface OrderDetailMapper {
 
     @Delete("delete from `order_detail` where order_id = #{orderId}")
     void deleteByOrderId(Integer orderId);
+
+    List<Map<String, Object>> selectCategoryAmountGroup(@Param("orderIds") List<Integer> orderIds);
 }

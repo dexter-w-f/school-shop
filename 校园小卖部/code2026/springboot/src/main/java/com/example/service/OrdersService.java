@@ -6,6 +6,7 @@ import cn.hutool.core.util.RandomUtil;
 import com.example.entity.*;
 import com.example.exception.CustomException;
 import com.example.mapper.*;
+import com.example.config.AuthValidator;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import jakarta.annotation.Resource;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.util.Set;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -97,7 +99,9 @@ public class OrdersService {
         }
         // 余额在支付时扣除
        orders.setTotal(totalPrice);
-       ordersMapper.updateById(orders);//更新订单
+       if (orderId != null) {
+           ordersMapper.updateTotalAndOrderNoById(orders);
+       }
 
     }
 
@@ -111,38 +115,95 @@ public class OrdersService {
     }
 
     /**
-     * 修改
+     * 修改订单状态。
+     *
+     * @param allowManageStatus true 表示调用者具备管理员权限，可执行出货/配送/完成等管理动作；
+     *                          false 表示普通用户，只能取消或确认收货。
      */
-   @Transactional
-   public void updateById(Orders orders) {
-       Orders current = ordersMapper.selectById(orders.getId());
-        if(current == null || "已取消".equals(current.getStatus())) {
+  @Transactional
+  public void updateById(Orders orders, boolean allowManageStatus) {
+      Orders current = ordersMapper.selectById(orders.getId());
+       if (current == null || "已取消".equals(current.getStatus()) || "已完成".equals(current.getStatus())) {
            return;
        }
-        if("已取消".equals(orders.getStatus())){
-           Integer userId = orders.getUserId();
+       String target = orders.getStatus();
+       if (target == null || target.isBlank()) {
+           return;
+       }
+       if ("已取消".equals(target)) {
+           Set<String> cancellable = java.util.Set.of("待支付", "待接单", "已出货", "已配送", "待收货");
+           if (!cancellable.contains(current.getStatus())) {
+               throw new CustomException("当前订单状态不允许取消");
+           }
+           Integer userId = current.getUserId();
            User user = userMapper.selectById(userId);
-           // 如果是已支付的订单取消，才需要退余额
-           boolean wasPaid = !"待支付".equals(current.getStatus());
-           if (wasPaid && user != null) {
-               user.setAccount(user.getAccount().add(orders.getTotal()));
+           // 仅余额支付的订单需要退回余额；支付宝/微信等已在支付渠道退回，退到余额会造成重复退款
+           boolean wasPaidByBalance = "余额支付".equals(current.getPayType());
+           if (wasPaidByBalance && user != null) {
+               user.setAccount(user.getAccount().add(current.getTotal()));
                userMapper.updateById(user);
            }
-           //
-            OrderDetail orderDetail = new OrderDetail();
-            orderDetail.setOrderId(orders.getId());
-            List<OrderDetail> orderDetailList =orderDetailMapper.selectAll(orderDetail);
+           List<OrderDetail> orderDetailList = current.getOrderDetailList();
+           if (orderDetailList == null) {
+               OrderDetail query = new OrderDetail();
+               query.setOrderId(current.getId());
+               orderDetailList = orderDetailMapper.selectAll(query);
+           }
            for (OrderDetail detail : orderDetailList) {
-                Integer goodsId = detail.getGoodsId();
+               Integer goodsId = detail.getGoodsId();
                Goods goods = goodsMapper.selectById(goodsId);
-                if(goods != null){
-                    goods.setStore(goods.getStore() + detail.getNum());
-                    goods.setSaleCount(goods.getSaleCount() - detail.getNum());
-                    goodsMapper.updateById(goods);
+               if (goods != null) {
+                   goods.setStore(goods.getStore() + detail.getNum());
+                   goods.setSaleCount(goods.getSaleCount() - detail.getNum());
+                   goodsMapper.updateById(goods);
+               }
+           }
+           ordersMapper.updateStatusToCancelledIfNotFinished(current.getId(), "已取消");
+           return;
+       }
+
+       // 非取消类状态流转，必须匹配状态机，避免"接口返回成功但状态没变"的静默失败
+       String expectedFrom = expectedFromStatus(current.getStatus(), target);
+       if (expectedFrom == null) {
+           throw new CustomException("当前订单状态不允许变更为" + target);
+       }
+       if (!allowManageStatus && !"已完成".equals(target)) {
+           throw new CustomException("无权执行该订单操作");
+       }
+       int updated = ordersMapper.updateStatusFrom(current.getId(), expectedFrom, target);
+       if (updated == 0) {
+           throw new CustomException("订单状态已变更，请刷新后重试");
+       }
+   }
+
+    /**
+     * 订单状态机：返回目标状态应当来自的前置状态；不合法时返回 null。
+     */
+    private String expectedFromStatus(String currentStatus, String target) {
+        switch (target) {
+            case "已出货":
+                return "待接单".equals(currentStatus) ? "待接单" : null;
+            case "已配送":
+                return "待接单".equals(currentStatus) ? "待接单" : null;
+            case "待收货":
+                return "已出货".equals(currentStatus) ? "已出货" : null;
+            case "已完成":
+                // 用户确认收货，或管理端直接完成
+                if ("已出货".equals(currentStatus) || "已配送".equals(currentStatus) || "待收货".equals(currentStatus)) {
+                    return currentStatus;
                 }
-            }
+                return null;
+            default:
+                return null;
         }
-        ordersMapper.updateById(orders);
+    }
+
+    /**
+     * 兼容旧调用方：默认按普通用户权限处理。
+     */
+    @Transactional
+    public void updateById(Orders orders) {
+        updateById(orders, false);
     }
 
     /**
@@ -182,13 +243,13 @@ public class OrdersService {
      * 支付订单
      */
     @Transactional
-    public void pay(Integer orderId, String payType) {
+    public boolean pay(Integer orderId, String payType) {
         Orders orders = ordersMapper.selectById(orderId);
         if (orders == null) {
             throw new CustomException("订单不存在");
         }
         if (!"待支付".equals(orders.getStatus())) {
-            throw new CustomException("订单状态异常，无法支付");
+            return false;
         }
 
         User user = userMapper.selectById(orders.getUserId());
@@ -208,7 +269,23 @@ public class OrdersService {
 
         orders.setPayType(payType);
         orders.setStatus("待接单");
-        ordersMapper.updateById(orders);
+        int updated = ordersMapper.updateStatusIfPending(orders.getId(), orders.getStatus(), orders.getPayType());
+        if (updated == 0) {
+            return false;
+        }
+        return true;
+    }
+
+    @Transactional
+    public boolean payByUser(Integer orderId, String payType, Integer currentUserId) {
+        Orders orders = ordersMapper.selectById(orderId);
+        if (orders == null) {
+            throw new CustomException("订单不存在");
+        }
+        if (!currentUserId.equals(orders.getUserId())) {
+            throw new CustomException("无权支付该订单");
+        }
+        return pay(orderId, payType);
     }
 
 
@@ -249,9 +326,7 @@ public class OrdersService {
         }
         String status = alipayService.queryPayment(order.getOrderNo());
         if ("SUCCESS".equals(status)) {
-            order.setPayType("支付宝");
-            order.setStatus("待接单");
-            ordersMapper.updateById(order);
+            ordersMapper.updateStatusIfPending(order.getId(), "待接单", "支付宝");
         }
         return status;
     }
@@ -272,13 +347,29 @@ public class OrdersService {
         if (!list.isEmpty()) {
             Orders order = list.get(0);
             if ("待支付".equals(order.getStatus())) {
-                order.setPayType("支付宝");
-                order.setStatus("待接单");
-                ordersMapper.updateById(order);
+                ordersMapper.updateStatusIfPending(order.getId(), "待接单", "支付宝");
             }
             return true;
         }
         return false;
     }
 
+    /**
+     * 自动确认超过7天的订单为已完成
+     */
+    @Transactional
+    public void autoConfirmReceiptTimeoutOrders(Orders orders) {
+        if (orders == null || orders.getId() == null) {
+            return;
+        }
+        Orders current = ordersMapper.selectById(orders.getId());
+        if (current == null || "已取消".equals(current.getStatus()) || "已完成".equals(current.getStatus())) {
+            return;
+        }
+        current.setStatus("已完成");
+        ordersMapper.updateById(current);
+    }
+
 }
+
+

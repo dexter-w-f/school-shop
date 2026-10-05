@@ -9,6 +9,8 @@ import com.example.entity.SeckillActivity;
 import com.example.entity.User;
 import com.example.mapper.*;
 import com.example.service.OrdersService;
+
+import com.example.exception.CustomException;
 import com.example.utils.RedisKeyUtils;
 import jakarta.annotation.Resource;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -19,9 +21,19 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.Set;
+
 @RestController
 @RequestMapping("/seckill")
 public class SeckillController {
+
+    private static final Set<String> ADMIN_PATHS = Set.of(
+            "/seckill/list",
+            "/seckill/add",
+            "/seckill/delete/",
+            "/seckill/update"
+    );
 
     @Resource private SeckillActivityMapper seckillActivityMapper;
     @Resource private GoodsMapper goodsMapper;
@@ -32,7 +44,8 @@ public class SeckillController {
 
     // ---- Admin CRUD ----
     @GetMapping("/list")
-    public Result list(SeckillActivity activity) {
+    public Result list(SeckillActivity activity, HttpServletRequest request) {
+        requireAdmin(request);
         List<SeckillActivity> all = seckillActivityMapper.selectAll(null);
         String now = DateUtil.now();
         for (SeckillActivity a : all) {
@@ -49,7 +62,8 @@ public class SeckillController {
     }
 
     @PostMapping("/add")
-    public Result add(@RequestBody SeckillActivity activity) {
+    public Result add(@RequestBody SeckillActivity activity, HttpServletRequest request) {
+        requireAdmin(request);
         if (activity.getGoodsId() == null) return Result.error("请选择商品");
         List<SeckillActivity> existing = seckillActivityMapper.selectAll(null);
         for (SeckillActivity e : existing) {
@@ -65,14 +79,16 @@ public class SeckillController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public Result delete(@PathVariable Integer id) {
+    public Result delete(@PathVariable Integer id, HttpServletRequest request) {
+        requireAdmin(request);
         seckillActivityMapper.deleteById(id);
         redisTemplate.delete(RedisKeyUtils.seckillStockKey(id));
         return Result.success();
     }
 
     @PutMapping("/update")
-    public Result update(@RequestBody SeckillActivity activity) {
+    public Result update(@RequestBody SeckillActivity activity, HttpServletRequest request) {
+        requireAdmin(request);
         seckillActivityMapper.updateById(activity);
         return Result.success();
     }
@@ -102,19 +118,29 @@ public class SeckillController {
     @PostMapping("/buy")
     @Transactional
     public Result buy(@RequestParam Integer userId, @RequestParam Integer activityId) {
+        if (userId == null || activityId == null) {
+            return Result.error("参数异常");
+        }
+
+        User currentUser = userMapper.selectById(userId);
+        if (currentUser == null) {
+            return Result.error("用户不存在");
+        }
+
         SeckillActivity activity = seckillActivityMapper.selectById(activityId);
         if (activity == null) return Result.error("活动不存在");
         if (!"进行中".equals(activity.getStatus())) return Result.error("活动未开始或已结束");
         if (activity.getTotalStock() <= 0) return Result.error("已售罄");
 
-        User user = userMapper.selectById(userId);
-        if (user == null) return Result.error("用户不存在");
+        String userBuyKey = RedisKeyUtils.seckillUserBuyKey(activityId, userId);
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(userBuyKey))) {
+            return Result.error("您已参与过该秒杀活动");
+        }
 
         Goods goods = goodsMapper.selectById(activity.getGoodsId());
         if (goods == null) return Result.error("商品不存在");
-        if (goods.getStore() < 1) return Result.error("商品库存不足");
 
-        // Redis 原子扣库存
+        // Redis 原子扣库存（带兜底回滚）
         String key = RedisKeyUtils.seckillStockKey(activityId);
         Boolean hasKey = redisTemplate.hasKey(key);
         if (Boolean.FALSE.equals(hasKey)) {
@@ -128,38 +154,55 @@ public class SeckillController {
             seckillActivityMapper.updateById(activity);
             return Result.error("秒杀已结束");
         }
+        try {
+            // 创建订单
+            Orders order = new Orders();
+            order.setUserId(userId);
+            order.setStatus("待支付");
+            order.setTotal(activity.getSeckillPrice());
+            order.setTime(DateUtil.now());
+            order.setOrderNo(DateUtil.format(new Date(), "yyyyMMdd") + System.currentTimeMillis());
+            ordersMapper.insert(order);
 
-        // 创建订单
-        Orders order = new Orders();
-        order.setUserId(userId);
-        order.setStatus("待支付");
-        order.setTotal(activity.getSeckillPrice());
-        order.setTime(DateUtil.now());
-        order.setOrderNo(DateUtil.format(new Date(), "yyyyMMdd") + System.currentTimeMillis());
-        ordersMapper.insert(order);
+            OrderDetail detail = new OrderDetail();
+            detail.setOrderId(order.getId());
+            detail.setGoodsId(goods.getId());
+            detail.setGoodsName(goods.getName());
+            detail.setGoodsImg(goods.getImg());
+            detail.setGoodsPrice(activity.getSeckillPrice());
+            detail.setNum(1);
+            orderDetailMapper.insert(detail);
 
-        OrderDetail detail = new OrderDetail();
-        detail.setOrderId(order.getId());
-        detail.setGoodsId(goods.getId());
-        detail.setGoodsName(goods.getName());
-        detail.setGoodsImg(goods.getImg());
-        detail.setGoodsPrice(activity.getSeckillPrice());
-        detail.setNum(1);
-        orderDetailMapper.insert(detail);
+            // 更新秒杀库存
+            activity.setTotalStock(activity.getTotalStock() - 1);
+            seckillActivityMapper.updateById(activity);
+            // 更新商品库存和销量
+            int goodsUpdated = goodsMapper.updateStoreDeduct(goods.getId(), 1);
+            if (goodsUpdated == 0) {
+                throw new CustomException("商品库存不足，请稍后重试");
+            }
+            redisTemplate.opsForValue().set(userBuyKey, "1", RedisKeyUtils.seckillStockTtl(activity.getEndTime()));
 
-        // 更新秒杀库存
-        activity.setTotalStock(activity.getTotalStock() - 1);
-        seckillActivityMapper.updateById(activity);
-        // 更新商品库存和销量
-        goods.setStore(goods.getStore() - 1);
-        goods.setSaleCount(goods.getSaleCount() + 1);
-        goodsMapper.updateById(goods);
+            if (Boolean.FALSE.equals(redisTemplate.getExpire(key))) {
+                redisTemplate.expire(key, RedisKeyUtils.seckillStockTtl(activity.getEndTime()));
+            }
 
-        if (Boolean.FALSE.equals(redisTemplate.getExpire(key))) {
+            return Result.success(order.getId());
+        } catch (Exception e) {
+            // 回滚 Redis 库存，避免数据库失败导致超卖
+            redisTemplate.opsForValue().increment(key);
             redisTemplate.expire(key, RedisKeyUtils.seckillStockTtl(activity.getEndTime()));
+            throw e;
         }
+    }
 
-        return Result.success(order.getId());
+    private static void requireAdmin(HttpServletRequest request) {
+        String role = request.getHeader("X-Current-Role");
+        if (!"管理员".equals(role)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "无管理员权限");
+        }
     }
 }
+
+
 

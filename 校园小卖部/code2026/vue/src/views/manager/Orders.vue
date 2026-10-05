@@ -158,8 +158,9 @@ const add = () => {
 
 const out = (row) => {
   ElMessageBox.confirm('您确认订单已出货吗?', '二次确认', { type: 'warning' }).then(res => {
-    data.form =row
-    data.form.status = '已出货'
+    data.form = JSON.parse(JSON.stringify(row))
+    // 自提出库 -> 已出货；外送发货 -> 已配送，与后端状态机保持一致
+    data.form.status = data.form.deliverType === '外送' ? '已配送' : '已出货'
     request.put('/orders/update', data.form).then(res => {
       if (res.code === '200') {
         load()

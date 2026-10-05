@@ -1,25 +1,87 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.mapper.SeckillActivityMapper">
-    <select id="selectAll" resultType="com.example.entity.SeckillActivity">
-        select a.*, g.name as goodsName, g.img as goodsImg from seckill_activity a
-        left join goods g on a.goods_id = g.id
+
+    <resultMap id="seckillActivityResultMap" type="com.example.entity.SeckillActivity">
+        <result property="id" column="id"/>
+        <result property="goodsId" column="goods_id"/>
+        <result property="seckillPrice" column="seckill_price"/>
+        <result property="totalStock" column="total_stock"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <!-- goods_name / goods_img 不属于 seckill_activity 表，通过 join goods 取得 -->
+        <result property="goodsName" column="goods_name"/>
+        <result property="goodsImg" column="goods_img"/>
+    </resultMap>
+
+    <sql id="selectColumns">
+        sa.id, sa.goods_id, sa.seckill_price, sa.total_stock, sa.start_time,
+        sa.end_time, sa.status, sa.create_time,
+        g.name as goods_name, g.img as goods_img
+    </sql>
+
+    <select id="selectById" resultMap="seckillActivityResultMap">
+        select <include refid="selectColumns"/>
+        from seckill_activity sa
+        left join goods g on g.id = sa.goods_id
+        where sa.id = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="seckillActivityResultMap">
+        select <include refid="selectColumns"/>
+        from seckill_activity sa
+        left join goods g on g.id = sa.goods_id
         <where>
-            <if test="status != null"> and a.status = #{status}</if>
-            <if test="goodsId != null"> and a.goods_id = #{goodsId}</if>
+            <if test="goodsId != null"> and sa.goods_id = #{goodsId}</if>
+            <if test="status != null and status != ''"> and sa.status = #{status}</if>
+            <if test="startTime != null and startTime != ''"> and sa.start_time = #{startTime}</if>
+            <if test="endTime != null and endTime != ''"> and sa.end_time = #{endTime}</if>
         </where>
-        order by a.id desc
+        order by sa.id desc
     </select>
-    <select id="selectById" resultType="com.example.entity.SeckillActivity">
-        select a.*, g.name as goodsName from seckill_activity a left join goods g on a.goods_id = g.id where a.id = #{id}
-    </select>
-    <delete id="deleteById">delete from seckill_activity where id = #{id}</delete>
+
     <insert id="insert" parameterType="com.example.entity.SeckillActivity" useGeneratedKeys="true" keyProperty="id">
-        insert into seckill_activity(goods_id, seckill_price, total_stock, start_time, end_time, status, create_time)
-        values(#{goodsId}, #{seckillPrice}, #{totalStock}, #{startTime}, #{endTime}, #{status}, #{createTime})
+        insert into seckill_activity
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="goodsId != null">goods_id,</if>
+            <if test="seckillPrice != null">seckill_price,</if>
+            <if test="totalStock != null">total_stock,</if>
+            <if test="startTime != null and startTime != ''">start_time,</if>
+            <if test="endTime != null and endTime != ''">end_time,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createTime != null and createTime != ''">create_time,</if>
+        </trim>
+        values
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="goodsId != null">#{goodsId},</if>
+            <if test="seckillPrice != null">#{seckillPrice},</if>
+            <if test="totalStock != null">#{totalStock},</if>
+            <if test="startTime != null and startTime != ''">#{startTime},</if>
+            <if test="endTime != null and endTime != ''">#{endTime},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createTime != null and createTime != ''">#{createTime},</if>
+        </trim>
     </insert>
+
     <update id="updateById" parameterType="com.example.entity.SeckillActivity">
-        update seckill_activity set goods_id=#{goodsId}, seckill_price=#{seckillPrice}, total_stock=#{totalStock},
-        start_time=#{startTime}, end_time=#{endTime}, status=#{status} where id=#{id}
+        update seckill_activity
+        <set>
+            <if test="goodsId != null">goods_id = #{goodsId},</if>
+            <if test="seckillPrice != null">seckill_price = #{seckillPrice},</if>
+            <if test="totalStock != null">total_stock = #{totalStock},</if>
+            <if test="startTime != null and startTime != ''">start_time = #{startTime},</if>
+            <if test="endTime != null and endTime != ''">end_time = #{endTime},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="createTime != null and createTime != ''">create_time = #{createTime},</if>
+        </set>
+        where id = #{id}
     </update>
+
+    <delete id="deleteById">
+        delete from seckill_activity where id = #{id}
+    </delete>
 </mapper>
