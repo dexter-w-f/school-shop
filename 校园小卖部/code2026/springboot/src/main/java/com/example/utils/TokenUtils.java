@@ -33,10 +33,13 @@ public class TokenUtils {
 
     public static String generateToken(Integer userId, String role) {
         String token = UUID.randomUUID().toString();
-        String key = String.valueOf(userId);
+        // 关键：管理员与普通用户是两张表，id 可能相同（例如 admin#1 与 user#1）。
+        // 若只用 userId 作为 key，两者会互相顶掉 token，导致"登录管理员后普通用户被登出"。
+        // 因此 key 必须带上角色。
+        String key = accountKey(userId, role);
         String oldToken = TOKEN_MAP.get(key);
         if (oldToken != null) {
-            // 同一用户重新登录，作废旧 token
+            // 同一账号重新登录，作废旧 token
             USER_MAP.remove(oldToken);
             TOKEN_USER_INFO_MAP.remove(oldToken);
             TOKEN_EXPIRE_MAP.remove(oldToken);
@@ -48,6 +51,14 @@ public class TokenUtils {
                 : "user=" + userId + ";role=" + emptyToNull(role));
         TOKEN_EXPIRE_MAP.put(token, System.currentTimeMillis() + TOKEN_TTL_MS);
         return token;
+    }
+
+    /**
+     * 账号唯一键：角色 + id。兼容 userId-only 的旧调用（无角色时退化为纯 id）。
+     */
+    private static String accountKey(Integer userId, String role) {
+        String r = emptyToNull(role);
+        return r == null ? String.valueOf(userId) : r + ":" + userId;
     }
 
     /**
@@ -89,15 +100,29 @@ public class TokenUtils {
         TOKEN_EXPIRE_MAP.remove(token);
     }
 
+    /**
+     * 按 userId 作废 token。因 key 现在是「角色:id」，需要遍历匹配，
+     * 同时兼容旧的纯 id key。
+     */
     public static void removeByUserId(Integer userId) {
         if (userId == null) {
             return;
         }
-        String token = TOKEN_MAP.remove(String.valueOf(userId));
-        if (token != null) {
-            USER_MAP.remove(token);
-            TOKEN_USER_INFO_MAP.remove(token);
-            TOKEN_EXPIRE_MAP.remove(token);
+        String idStr = String.valueOf(userId);
+        java.util.List<String> keys = new java.util.ArrayList<>();
+        keys.add(idStr);
+        for (String k : TOKEN_MAP.keySet()) {
+            if (k.endsWith(":" + idStr)) {
+                keys.add(k);
+            }
+        }
+        for (String k : keys) {
+            String token = TOKEN_MAP.remove(k);
+            if (token != null) {
+                USER_MAP.remove(token);
+                TOKEN_USER_INFO_MAP.remove(token);
+                TOKEN_EXPIRE_MAP.remove(token);
+            }
         }
     }
 

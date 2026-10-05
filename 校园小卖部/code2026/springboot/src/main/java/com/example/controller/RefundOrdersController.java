@@ -75,33 +75,55 @@ public class RefundOrdersController {
     /**
      * 根据ID查询
      */
+    /**
+     * 根据ID查询（管理员可查任意；普通用户只能查自己的售后单）
+     */
     @GetMapping("/selectById/{id}")
     public Result selectById(@PathVariable Integer id) {
-        AdminControllerUtils.requireAdmin(request);
-        RefundOrders refundOrders = refundOrdersService.selectById(id);
-        return Result.success(refundOrders);
+        RefundOrders db = refundOrdersService.selectById(id);
+        if (db == null) {
+            return Result.error("售后单不存在");
+        }
+        if (!AdminControllerUtils.isAdmin(request)) {
+            Integer currentUserId = AuthValidator.requireUserId(request);
+            if (!currentUserId.equals(db.getUserId())) {
+                return Result.error("无权查看该售后单");
+            }
+        }
+        return Result.success(db);
     }
 
     /**
-     * 查询所有
+     * 查询所有：管理员看全部，普通用户只能看自己的售后单
      */
     @GetMapping("/selectAll")
     public Result selectAll(RefundOrders refundOrders) {
-        AdminControllerUtils.requireAdmin(request);
+        applyScope(refundOrders);
         List<RefundOrders> list = refundOrdersService.selectAll(refundOrders);
         return Result.success(list);
     }
 
     /**
-     * 分页查询
+     * 分页查询：管理员看全部，普通用户只能看自己的售后单
+     * （用户端"我的售后"页面 UserRefund.vue 依赖该接口，不能限制为仅管理员）
      */
     @GetMapping("/selectPage")
     public Result selectPage(RefundOrders refundOrders,
                              @RequestParam(defaultValue = "1") Integer pageNum,
                              @RequestParam(defaultValue = "10") Integer pageSize) {
-        AdminControllerUtils.requireAdmin(request);
+        applyScope(refundOrders);
         PageInfo<RefundOrders> page = refundOrdersService.selectPage(refundOrders, pageNum, pageSize);
         return Result.success(page);
+    }
+
+    /**
+     * 管理员可查询全部（或按 userId 过滤）；普通用户强制只能查询自己的售后单。
+     */
+    private void applyScope(RefundOrders refundOrders) {
+        if (AdminControllerUtils.isAdmin(request)) {
+            return;
+        }
+        refundOrders.setUserId(AuthValidator.requireUserId(request));
     }
 
     /**
