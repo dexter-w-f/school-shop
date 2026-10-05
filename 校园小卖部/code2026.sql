@@ -1,3 +1,17 @@
+-- ============================================================================
+-- ⚠️ 本文件已过时，请勿用于建库！
+--
+-- 这是早期从 Navicat 导出的残留，**只包含 `admin` 一张表**，
+-- 缺少 user / goods / category / cart / collect / comment / carousel /
+-- orders / order_detail 等核心业务表。
+-- 用它初始化数据库会导致 7 个 alter_*.sql 从第一句就失败，系统无法运行。
+--
+-- ✅ 正确建库方式（完整 17 张表，由本地可运行的 shop 库真实导出）：
+--    mysql -uroot -p < 校园小卖部/code2026/schema_full.sql
+--    mysql -uroot -p < 校园小卖部/code2026/indexes.sql
+--    或直接用仓库根目录 docker-compose.yml（已挂载上述两个脚本）。
+-- ============================================================================
+
 /*
  Navicat Premium Data Transfer
 

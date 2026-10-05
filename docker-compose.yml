@@ -1,62 +1,77 @@
- version: '3.8'
- 
- services:
-   mysql:
-     image: mysql:8.0
-     container_name: shop-mysql
-     restart: unless-stopped
-     environment:
-       MYSQL_ROOT_PASSWORD: 123456
-       MYSQL_DATABASE: shop
-     ports:
-       - "3306:3306"
-     volumes:
-       - mysql_data:/var/lib/mysql
-       - ./校园小卖部/code2026.sql:/docker-entrypoint-initdb.d/01-init.sql
-       - ./校园小卖部/code2026/update_passwords.sql:/docker-entrypoint-initdb.d/02-update-passwords.sql
-     healthcheck:
-       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-       interval: 10s
-       timeout: 5s
-       retries: 5
- 
-   redis:
-     image: redis:7-alpine
-     container_name: shop-redis
-     restart: unless-stopped
-     ports:
-       - "6379:6379"
- 
-   backend:
-     build:
-       context: .
-       dockerfile: docker/backend.Dockerfile
-     container_name: shop-backend
-     restart: unless-stopped
-     ports:
-       - "9090:9090"
-     depends_on:
-       mysql:
-         condition: service_healthy
-       redis:
-         condition: service_started
-     environment:
-       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/shop?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true&useSSL=false&serverTimezone=GMT%2b8&allowPublicKeyRetrieval=true
-       SPRING_DATASOURCE_USERNAME: root
-       SPRING_DATASOURCE_PASSWORD: 123456
-       SPRING_DATA_REDIS_HOST: redis
-       FILE_BASE_URL: http://localhost
- 
-   frontend:
-     build:
-       context: .
-       dockerfile: docker/frontend.Dockerfile
-     container_name: shop-frontend
-     restart: unless-stopped
-     ports:
-       - "80:80"
-     depends_on:
-       - backend
- 
- volumes:
-   mysql_data:
+name: shop
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: shop-mysql
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: shop
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # 完整建库脚本（17 张表，由本地可运行的 shop 库真实导出）
+      - ./校园小卖部/code2026/schema_full.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      # 索引脚本（存储过程封装，可重复执行）
+      - ./校园小卖部/code2026/indexes.sql:/docker-entrypoint-initdb.d/02-indexes.sql
+      # 注意：不要挂载 update_passwords.sql —— 其 BCrypt 哈希经实测无效，执行后所有账号都无法登录
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: shop-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: shop-backend
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      # application.yml 中为小写 fileBaseUrl，Spring relaxed binding 可正常映射
+      FILE_BASE_URL: http://localhost
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/shop?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true&useSSL=false&serverTimezone=GMT%2b8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 123456
+      SPRING_DATA_REDIS_HOST: redis
+      # 可选：不配置则支付宝/邮件/AI 客服不可用（会走模拟支付，不影响启动）
+      # AI_API_KEY: ""
+      # ALIPAY_APP_ID: ""
+      # ALIPAY_APP_PRIVATE_KEY: ""
+      # ALIPAY_PUBLIC_KEY: ""
+      # SMTP_USER: ""
+      # SMTP_PASS: ""
+    volumes:
+      # 持久化上传文件：容器内工作目录为 /app，FileStorage 解析到 /app/files
+      - ./校园小卖部/code2026/files:/app/files
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    container_name: shop-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
