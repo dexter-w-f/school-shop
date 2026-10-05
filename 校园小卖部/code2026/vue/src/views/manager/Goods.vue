@@ -122,6 +122,7 @@
 
 <script setup>
 import request from "@/utils/request";
+import { sanitizeHtml } from "@/utils/sanitize";
 import {reactive,ref} from "vue";
 import {ElMessageBox, ElMessage} from "element-plus";
 
@@ -188,7 +189,8 @@ const handleCreated = (editor) => {
 }
 
 const view = (content) => {
-  data.content = content
+  // 富文本渲染前净化，避免历史脏数据造成 XSS
+  data.content = sanitizeHtml(content)
   data.viewVisible = true
 }
 

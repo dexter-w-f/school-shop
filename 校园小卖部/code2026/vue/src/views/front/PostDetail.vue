@@ -44,6 +44,7 @@
 
 <script setup>
 import request from "@/utils/request";
+import { sanitizeHtml } from "@/utils/sanitize";
 import {reactive, onMounted} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
@@ -58,7 +59,10 @@ const loadPost = () => {
   const id = route.query.id;
   if (!id) { router.push("/front/postList"); return; }
   request.get("/post/selectById/" + id).then(res => {
-    if (res.data) { data.post = res.data; }
+    if (res.data) {
+      // 帖子正文用户可控，渲染前净化，避免存储型 XSS
+      data.post = { ...res.data, content: sanitizeHtml(res.data.content) }
+    }
     else { ElMessage.error("帖子不存在"); router.push("/front/postList"); }
   })
 }

@@ -40,6 +40,8 @@ public class OrdersService {
     @Resource
     CartMapper cartMapper;
     @Resource
+    RefundOrdersMapper refundOrdersMapper;
+    @Resource
     private AlipayService alipayService;
     /**
      * 新增
@@ -56,6 +58,9 @@ public class OrdersService {
 
        List<Cart> cartList = orders.getCartList();
        BigDecimal totalPrice = BigDecimal.ZERO;
+       if (cartList == null || cartList.isEmpty()) {
+           throw new CustomException("购物车不能为空");
+       }
        User user = userMapper.selectById(orders.getUserId());
        if (user == null) {
            throw new CustomException("用户不存在");
@@ -64,6 +69,10 @@ public class OrdersService {
        // 先计算总价并校验库存
        for (Cart cart : cartList) {
           Integer goodsId = cart.getGoodsId();
+          // 数量必须为正：负数会让总价变小，并导致 updateStoreDeduct 反向加库存
+          if (cart.getNum() == null || cart.getNum() <= 0) {
+              throw new CustomException("商品数量不合法");
+          }
           Goods goods = goodsMapper.selectById(goodsId);
            if(goods == null){
                throw new CustomException("商品不存在");
@@ -134,6 +143,15 @@ public class OrdersService {
            Set<String> cancellable = java.util.Set.of("待支付", "待接单", "已出货", "已配送", "待收货");
            if (!cancellable.contains(current.getStatus())) {
                throw new CustomException("当前订单状态不允许取消");
+           }
+           // 与售后退款互斥：已有售后单时不允许再走"取消订单"退款通道，
+           // 否则同一笔订单会被退两次（取消退一次 + 售后执行退款再退一次）。
+           RefundOrders refundCheck = new RefundOrders();
+           refundCheck.setOrderId(current.getId());
+           for (RefundOrders r : refundOrdersMapper.selectAll(refundCheck)) {
+               if ("待审核".equals(r.getStatus()) || "已通过".equals(r.getStatus()) || "已退款".equals(r.getStatus())) {
+                   throw new CustomException("该订单已有售后申请，请通过售后流程处理");
+               }
            }
            Integer userId = current.getUserId();
            User user = userMapper.selectById(userId);

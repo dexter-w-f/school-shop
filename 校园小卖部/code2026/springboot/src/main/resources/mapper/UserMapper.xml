@@ -4,8 +4,13 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.mapper.UserMapper">
 
+    <!-- 列表/分页查询不返回密码哈希，避免哈希外泄到前端 -->
+    <sql id="listColumns">
+        id, username, name, avatar, role, account
+    </sql>
+
     <select id="selectAll" resultType="com.example.entity.User">
-            select * from `user`
+            select <include refid="listColumns"/> from `user`
             <where>
                 <if test="name !=null">
                     name like concat('%',#{name},'%')

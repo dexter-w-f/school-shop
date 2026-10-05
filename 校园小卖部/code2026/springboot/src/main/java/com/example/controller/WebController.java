@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -40,6 +41,9 @@ public class WebController {
 
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Resource
+    private com.example.mapper.OrdersMapper ordersMapper;
 
     /**
      * 默认请求接口
@@ -70,8 +74,10 @@ public class WebController {
             return Result.error("用户不存在");
         }
         loginAttemptLimiter.reset(account.getUsername());
-        String token = TokenUtils.generateToken(ac.getId());
+        String token = TokenUtils.generateToken(ac.getId(), ac.getRole());
         ac.setToken(token);
+        // 不要把密码哈希返回给前端
+        ac.setPassword(null);
         return Result.success(ac);
         } catch (CustomException e) {
             loginAttemptLimiter.recordFailure(account.getUsername());
@@ -111,14 +117,22 @@ public class WebController {
     }
 
     /**
-     * 修改密码
+     * 修改密码（只能修改当前登录账号自己的密码）
      */
     @PutMapping("/updatePassword")
-    public Result updatePassword(@RequestBody Account account) {
-        if ("管理员".equals(account.getRole())) {
-            adminService.updatePassword(account);
+    public Result updatePassword(@RequestBody Account account, HttpServletRequest request) {
+        Integer currentUserId = com.example.config.AuthValidator.requireUserId(request);
+        // 目标账号必须与当前会话一致，role 也不能由请求体决定，避免改他人密码/越权
+        if (account.getId() == null || !currentUserId.equals(account.getId())) {
+            return Result.error("只能修改当前登录账号的密码");
         }
-        if ("普通用户".equals(account.getRole())) {
+        String role = (String) request.getAttribute("currentRole");
+        if (role == null) {
+            return Result.error("登录状态异常，请重新登录");
+        }
+        if ("管理员".equals(role)) {
+            adminService.updatePassword(account);
+        } else {
             userService.updatePassword(account);
         }
         TokenUtils.removeByUserId(account.getId());
@@ -126,12 +140,12 @@ public class WebController {
     }
     @GetMapping("/count")
     public Result count() {
-        List<Orders> ordersList = ordersService.selectAll(null).stream().filter(orders ->!orders.getStatus().equals("已取消")).toList();
-        BigDecimal total = ordersList.stream().map(Orders::getTotal).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
-        String todayDate = DateUtil.today();
-        BigDecimal today = ordersList.stream().filter(orders -> orders.getTime().contains(todayDate)).map(Orders::getTotal).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+        String startOfToday = DateUtil.today() + " 00:00:00";
+        String endOfToday = DateUtil.today() + " 23:59:59";
+        BigDecimal total = ordersMapper.sumTotal("已取消");
+        BigDecimal today = ordersMapper.sumTotalByTime(startOfToday, endOfToday);
        Integer goods = goodsService.selectAll(null).size();
-        Integer user = userService.selectAll("").size();
+       Integer user = userService.selectAll("").size();
         Map<String,Object> map = new HashMap<>();
         map.put("total",total);
         map.put("today",today);
@@ -145,10 +159,9 @@ public class WebController {
         DateTime start = DateUtil.offsetDay(date, -6);
         List<DateTime> dateTimes = DateUtil.rangeToList(start, date, DateField.DAY_OF_YEAR);
         List<String> dateStrList = dateTimes.stream().map(DateUtil::formatDate).sorted().toList();
-        List<Orders> ordersList = ordersService.selectAll(null).stream().filter(orders ->!orders.getStatus().equals("已取消")).toList();
         ArrayList<BigDecimal> countList = new ArrayList<>();
         for (String day : dateStrList) {
-          BigDecimal total =   ordersList.stream().filter(o -> o.getTime().contains(day)).map(Orders::getTotal).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+            BigDecimal total = ordersMapper.sumTotalByTime(day + " 00:00:00", day + " 23:59:59");
             countList.add(total);
         }
 
@@ -160,37 +173,26 @@ public class WebController {
 
     @GetMapping("/selectPie")
     public Result selectPie() {
+        List<Orders> orders = ordersService.selectAll(null);
+        List<Integer> orderIds = orders.stream()
+                .filter(o -> !"已取消".equals(o.getStatus()))
+                .map(Orders::getId)
+                .toList();
+        List<Map<String,Object>> categoryAmounts = orderDetailMapper.selectCategoryAmountGroup(orderIds);
+        Map<Integer, Map<String, Object>> amountByCategoryId = categoryAmounts.stream()
+                .collect(Collectors.toMap(m -> ((Number) m.get("categoryId")).intValue(), m -> m, (a, b) -> a));
         List<Map<String,Object>> list = new ArrayList<>();
-        List<Category> categoryList = categoryService.selectAll(null);
-        Map<String,Object> map;
-        for (Category category : categoryList) {
-           map = new HashMap<>();
-            map.put("name",category.getName());
-            BigDecimal total = BigDecimal.ZERO;
-            List<OrderDetail> orderDetailList = orderDetailMapper.selectAll(null);
-            for (OrderDetail orderDetail : orderDetailList) {
-                Integer orderId = orderDetail.getOrderId();
-                Orders orders = ordersService.selectById(orderId);
-                if(!orders.getStatus().equals("已取消")){
-                   Integer goodsId = orderDetail.getGoodsId();
-                  Goods goods =  goodsService.selectById(goodsId);
-                   if(goods == null){
-                       continue;
-                   }
-                  if(goods.getCategoryId().equals(category.getId())){
-                       total=total.add(orders.getTotal());
-                   }
-                }
-            }
-            map.put("value",total);
-            if(total.compareTo(BigDecimal.ZERO) > 0){
+        for (Category category : categoryService.selectAll(null)) {
+            Map<String, Object> amount = amountByCategoryId.get(category.getId());
+            BigDecimal total = amount == null ? BigDecimal.ZERO : new BigDecimal(amount.getOrDefault("amount", BigDecimal.ZERO).toString());
+            if (total.compareTo(BigDecimal.ZERO) > 0) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("name", category.getName());
+                map.put("value", total);
                 list.add(map);
             }
-
-
         }
-
-       return Result.success(list);
+        return Result.success(list);
    }
 
     /**

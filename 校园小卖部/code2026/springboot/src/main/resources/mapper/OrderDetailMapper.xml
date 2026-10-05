@@ -71,4 +71,24 @@
         where id = #{id}
     </update>
 
+    <select id="selectCategoryAmountGroup" resultType="map">
+        <!-- 按明细金额汇总：若用 sum(o.total) 会随明细行数重复累加，导致统计虚高 -->
+        select g.category_id as categoryId, c.name as categoryName,
+               ifnull(sum(od.goods_price * od.num), 0) as amount
+        from `order_detail` od
+        join `goods` g on g.id = od.goods_id
+        join `category` c on c.id = g.category_id
+        join `orders` o on o.id = od.order_id
+        <where>
+            <if test="orderIds != null and orderIds.size() > 0">
+                and od.order_id in
+                <foreach collection="orderIds" item="orderId" open="(" separator="," close=")">
+                    #{orderId}
+                </foreach>
+            </if>
+            and o.status != '已取消'
+        </where>
+        group by g.category_id, c.name
+    </select>
+
 </mapper>

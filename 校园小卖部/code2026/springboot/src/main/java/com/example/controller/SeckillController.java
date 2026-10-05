@@ -100,11 +100,11 @@ public class SeckillController {
         List<SeckillActivity> list = seckillActivityMapper.selectAll(null);
         String now = DateUtil.now();
         for (SeckillActivity a : list) {
-            if ("未开始".equals(a.getStatus()) && a.getStartTime().compareTo(now) <= 0) {
+            if ("未开始".equals(a.getStatus()) && a.getStartTime() != null && a.getStartTime().compareTo(now) <= 0) {
                 a.setStatus("进行中");
                 seckillActivityMapper.updateById(a);
             }
-            if ("进行中".equals(a.getStatus()) && a.getEndTime().compareTo(now) < 0) {
+            if ("进行中".equals(a.getStatus()) && a.getEndTime() != null && a.getEndTime().compareTo(now) < 0) {
                 a.setStatus("已结束");
                 seckillActivityMapper.updateById(a);
             }
@@ -142,16 +142,14 @@ public class SeckillController {
 
         // Redis 原子扣库存（带兜底回滚）
         String key = RedisKeyUtils.seckillStockKey(activityId);
-        Boolean hasKey = redisTemplate.hasKey(key);
-        if (Boolean.FALSE.equals(hasKey)) {
-            redisTemplate.opsForValue().set(key, activity.getTotalStock());
+        // setIfAbsent 保证并发下只初始化一次，避免把库存重复重置回全量
+        Boolean initialized = redisTemplate.opsForValue().setIfAbsent(key, activity.getTotalStock());
+        if (Boolean.TRUE.equals(initialized)) {
             redisTemplate.expire(key, RedisKeyUtils.seckillStockTtl(activity.getEndTime()));
         }
         Long stock = redisTemplate.opsForValue().decrement(key);
         if (stock == null || stock < 0) {
             redisTemplate.opsForValue().increment(key);
-            redisTemplate.expire(key, RedisKeyUtils.seckillStockTtl(activity.getEndTime()));
-            seckillActivityMapper.updateById(activity);
             return Result.error("秒杀已结束");
         }
         try {
@@ -173,9 +171,11 @@ public class SeckillController {
             detail.setNum(1);
             orderDetailMapper.insert(detail);
 
-            // 更新秒杀库存
-            activity.setTotalStock(activity.getTotalStock() - 1);
-            seckillActivityMapper.updateById(activity);
+            // 原子扣减秒杀库存（库存不足则影响 0 行），不再用"读-改-写"
+            int stockUpdated = seckillActivityMapper.deductStock(activityId);
+            if (stockUpdated == 0) {
+                throw new CustomException("秒杀库存不足");
+            }
             // 更新商品库存和销量
             int goodsUpdated = goodsMapper.updateStoreDeduct(goods.getId(), 1);
             if (goodsUpdated == 0) {
@@ -183,7 +183,9 @@ public class SeckillController {
             }
             redisTemplate.opsForValue().set(userBuyKey, "1", RedisKeyUtils.seckillStockTtl(activity.getEndTime()));
 
-            if (Boolean.FALSE.equals(redisTemplate.getExpire(key))) {
+            // 补 TTL：getExpire 返回 Long，负数/空表示 key 没有过期时间
+            Long ttl = redisTemplate.getExpire(key);
+            if (ttl == null || ttl < 0) {
                 redisTemplate.expire(key, RedisKeyUtils.seckillStockTtl(activity.getEndTime()));
             }
 

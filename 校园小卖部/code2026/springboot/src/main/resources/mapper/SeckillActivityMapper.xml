@@ -84,4 +84,11 @@
     <delete id="deleteById">
         delete from seckill_activity where id = #{id}
     </delete>
+
+    <!-- 原子扣减库存：库存不足时影响 0 行，避免读改写造成超卖 -->
+    <update id="deductStock">
+        update seckill_activity
+        set total_stock = total_stock - 1
+        where id = #{id} and total_stock &gt;= 1
+    </update>
 </mapper>

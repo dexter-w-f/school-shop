@@ -18,6 +18,7 @@ import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -45,6 +46,10 @@ public class RefundOrdersService {
         Orders order = ordersMapper.selectById(refundOrders.getOrderId());
         if (order == null) {
             throw new CustomException("订单不存在");
+        }
+        // 与"取消订单退款"互斥：订单已取消（余额已退回）后不允许再申请售后，避免二次退款
+        if ("已取消".equals(order.getStatus())) {
+            throw new CustomException("订单已取消并已退款，无法再申请售后");
         }
         // 获取用户信息
         User user = userMapper.selectById(order.getUserId());
@@ -135,14 +140,34 @@ public class RefundOrdersService {
         if (!"已通过".equals(refund.getStatus())) {
             throw new CustomException("售后单未通过审核，无法退款");
         }
+        if (refund.getAmount() == null || refund.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new CustomException("退款金额不合法");
+        }
+        if ("已退款".equals(refund.getStatus())) {
+            return;
+        }
+
+        int updated = refundOrdersMapper.updateStatusIfApproved(refund.getId(), "已退款");
+        if (updated == 0) {
+            return;
+        }
+        // 重新查询最新状态，避免并发重复退款
+        refund = refundOrdersMapper.selectById(id);
+
         // 获取订单信息，根据支付方式选择退款渠道
         Orders order = ordersMapper.selectById(refund.getOrderId());
 
         // 支付宝支付：走支付宝退款API（钱退回用户支付宝）
         if (order != null && "支付宝".equals(order.getPayType())) {
-            boolean refunded = alipayService.refund(order.getOrderNo(), refund.getAmount().toString());
-            if (!refunded) {
-                throw new CustomException("支付宝退款失败，请重试");
+            try {
+                boolean refunded = alipayService.refund(order.getOrderNo(), refund.getAmount().toString());
+                if (!refunded) {
+                    throw new CustomException("支付宝退款失败，请重试");
+                }
+            } catch (Exception e) {
+                // 回滚售后单状态，允许下次重试
+                refundOrdersMapper.updateStatusIfApproved(refund.getId(), "已通过");
+                throw new CustomException("支付宝退款失败，请重试", e);
             }
         } else if (order != null && "余额支付".equals(order.getPayType())) {
             // 余额支付：退钱到用户余额
@@ -150,31 +175,34 @@ public class RefundOrdersService {
             if (user == null) {
                 throw new CustomException("用户不存在");
             }
+            if (user.getAccount().add(refund.getAmount()).compareTo(BigDecimal.ZERO) < 0) {
+                throw new CustomException("退款后余额不能为负数");
+            }
             user.setAccount(user.getAccount().add(refund.getAmount()));
             userMapper.updateById(user);
         }
         // 模拟支付：不涉及实际资金变动，只更新订单状态
 
-        refund.setStatus("已退款");
         refund.setHandleTime(DateUtil.now());
         refundOrdersMapper.updateById(refund);
 
         // 如果是仅退款或退货退款类型，将订单状态改为"已取消"（退回库存）
-        if (order != null && !"已完成".equals(order.getStatus())) {
-            // 恢复库存：加回库存、扣减销量
-            OrderDetail detailParam2 = new OrderDetail();
-            detailParam2.setOrderId(order.getId());
-            List<OrderDetail> detailList2 = orderDetailMapper.selectAll(detailParam2);
-            for (OrderDetail detail : detailList2) {
-                Goods goods = goodsMapper.selectById(detail.getGoodsId());
-                if (goods != null) {
-                    goods.setStore(goods.getStore() + detail.getNum());
-                    goods.setSaleCount(goods.getSaleCount() - detail.getNum());
-                    goodsMapper.updateById(goods);
+        if (order != null && !"已完成".equals(order.getStatus()) && !"已取消".equals(order.getStatus())) {
+            int orderUpdated = ordersMapper.updateStatusToCancelledIfNotFinished(order.getId(), "已取消");
+            if (orderUpdated > 0) {
+                // 恢复库存：加回库存、扣减销量
+                OrderDetail detailParam2 = new OrderDetail();
+                detailParam2.setOrderId(order.getId());
+                List<OrderDetail> detailList2 = orderDetailMapper.selectAll(detailParam2);
+                for (OrderDetail detail : detailList2) {
+                    Goods goods = goodsMapper.selectById(detail.getGoodsId());
+                    if (goods != null) {
+                        goods.setStore(goods.getStore() + detail.getNum());
+                        goods.setSaleCount(goods.getSaleCount() - detail.getNum());
+                        goodsMapper.updateById(goods);
+                    }
                 }
             }
-            order.setStatus("已取消");
-            ordersMapper.updateById(order);
         }
     }
 

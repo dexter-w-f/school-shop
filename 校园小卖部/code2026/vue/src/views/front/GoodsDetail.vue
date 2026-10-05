@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="front-container" style="">
     <div class="card" style="padding: 20px;display: flex; grid-gap: 20px;margin-bottom: 10px">
       <img :src="data.goods.img" style="width: 300px;height: 300px;">
@@ -108,6 +108,7 @@
 import {reactive, ref} from "vue";
 import router from "@/router";
 import request from "@/utils/request";
+import { sanitizeHtml } from "@/utils/sanitize";
 import {ElMessage} from "element-plus";
 import { getCompareList, addToCompare, removeFromCompare, isInCompare } from "@/utils/compare";
 
@@ -293,7 +294,8 @@ const toggleCompare = () => {
 
 const load = () => {
     request.get('/goods/selectById/' + data.id).then(res => {
-      data.goods = res.data
+      // 商品富文本渲染前净化（历史数据可能含不安全标签）
+      data.goods = res.data ? { ...res.data, content: sanitizeHtml(res.data.content) } : res.data
       if (res.data && res.data.status !== '上架') {
         ElMessage.warning('该商品已下架')
         router.push('/front/goods')

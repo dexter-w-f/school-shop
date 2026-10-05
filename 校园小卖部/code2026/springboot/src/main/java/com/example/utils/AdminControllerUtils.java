@@ -14,7 +14,7 @@ public class AdminControllerUtils {
 
     public static Integer requireAdmin(HttpServletRequest request) {
         String currentUserId = request.getHeader("X-Current-UserId");
-        String currentRole = request.getHeader("X-Current-Role");
+        String currentRole = normalizeRole(request.getHeader("X-Current-Role"));
         String token = request.getHeader("token");
         if (!StringUtils.hasText(currentUserId) || !"管理员".equals(currentRole) || !StringUtils.hasText(token)) {
             throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "未登录，请先登录");
@@ -39,7 +39,7 @@ public class AdminControllerUtils {
      */
     public static Integer getAdminUserId(HttpServletRequest request) {
         String currentUserId = request.getHeader("X-Current-UserId");
-        String currentRole = request.getHeader("X-Current-Role");
+        String currentRole = normalizeRole(request.getHeader("X-Current-Role"));
         String token = request.getHeader("token");
         if (!StringUtils.hasText(currentUserId) || !"管理员".equals(currentRole) || !StringUtils.hasText(token)) {
             return null;
@@ -62,5 +62,19 @@ public class AdminControllerUtils {
      */
     public static boolean isAdmin(HttpServletRequest request) {
         return getAdminUserId(request) != null;
+    }
+
+    /**
+     * 兼容浏览器直接发送 UTF-8 中文角色，以及只支持 ASCII 的客户端做百分号编码的情况。
+     */
+    private static String normalizeRole(String role) {
+        if (role == null || role.indexOf('%') < 0) {
+            return role;
+        }
+        try {
+            return java.net.URLDecoder.decode(role, java.nio.charset.StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return role;
+        }
     }
 }

@@ -4,8 +4,9 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.mapper.AdminMapper">
 
+    <!-- 列表查询不返回密码哈希 -->
     <select id="selectAll" resultType="com.example.entity.Admin">
-        select * from `admin`
+        select id, username, name, avatar, role from `admin`
         <where>
             <if test="name != null"> and name like concat('%', #{name}, '%')</if>
         </where>
