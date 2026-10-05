@@ -3,40 +3,28 @@ package com.example.utils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
- * 简单的密码测试工具
+ * BCrypt 哈希生成/校验工具（测试域，不会进入生产 jar）。
+ *
+ * 用途：生成可直接写进 SQL 迁移脚本的 BCrypt 哈希，并**当场校验**，
+ * 避免再次出现"脚本里的哈希根本无法通过校验"的问题。
+ *
+ * 用法：
+ *   生成某个口令的哈希：mvn -o test-compile exec:java -Dexec.mainClass=... （或直接用 IDE 运行）
+ *   默认（无参数）：生成 admin 与 123456 的哈希并校验
  */
 public class PasswordTest {
-    
+
     public static void main(String[] args) {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        
-        // 生成 "admin" 的哈希值
-        String adminPassword = encoder.encode("admin");
-        System.out.println("========== 管理员密码 ==========");
-        System.out.println("明文: admin");
-        System.out.println("加密后: " + adminPassword);
-        System.out.println();
-        
-        // 验证
-        boolean matches = encoder.matches("admin", adminPassword);
-        System.out.println("验证结果: " + (matches ? "成功" : "失败"));
-        System.out.println();
-        
-        // 生成 "123456" 的哈希值
-        String userPassword = encoder.encode("123456");
-        System.out.println("========== 用户密码 ==========");
-        System.out.println("明文: 123456");
-        System.out.println("加密后: " + userPassword);
-        System.out.println();
-        
-        // 验证
-        boolean userMatches = encoder.matches("123456", userPassword);
-        System.out.println("验证结果: " + (userMatches ? "成功" : "失败"));
-        System.out.println();
-        
-        System.out.println("========== SQL 语句 ==========");
-        System.out.println("-- 复制以下 SQL 到 MySQL 执行：");
-        System.out.println("UPDATE admin SET password = '" + adminPassword + "' WHERE username = 'admin';");
-        System.out.println("UPDATE user SET password = '" + userPassword + "';");
+        String[] plaintexts = args.length > 0 ? args : new String[]{"admin", "123456"};
+        for (String plain : plaintexts) {
+            String hash = encoder.encode(plain);
+            boolean ok = encoder.matches(plain, hash);
+            System.out.println("plaintext = " + plain);
+            System.out.println("hash      = " + hash);
+            System.out.println("verify    = " + ok);
+            System.out.println();
+        }
+        System.out.println("-- 可直接粘贴到 SQL 脚本（注意：每次生成的哈希都不同，但都能通过校验）");
     }
 }

@@ -49,7 +49,9 @@ CREATE TABLE `admin`  (
 -- ----------------------------
 -- Records of admin
 -- ----------------------------
-INSERT INTO `admin` VALUES (1, 'admin', '$2a$10$rS5E7Eh5rP5E7Eh5rP5E7Oo8uLOickgx2ZMRZoMyeIjZAgcfl7p92', '管理员', 'http://localhost:9090/files/download/avatar.png', '管理员');
--- 注意：密码为 BCrypt 加密格式，明文为 'admin'
+INSERT INTO `admin` VALUES (1, 'admin', '$2a$10$jcUgvGD5J2HaR/gRdFP4muew4sPUqB9KQSVcXfK57s5Db/up..0vS', '管理员', 'http://localhost:9090/files/download/avatar.png', '管理员');
+-- 密码为 BCrypt 值，明文 'admin'，已用项目自身的 BCryptPasswordEncoder 实测校验通过
+-- （此前版本里的哈希经实测无法通过校验，会导致 admin 登录失败）
+-- 普通用户默认口令为 123456，见 update_passwords.sql
 
 SET FOREIGN_KEY_CHECKS = 1;
