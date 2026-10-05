@@ -4,16 +4,12 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.Dict;
 import com.example.common.Result;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import jakarta.servlet.http.HttpServletRequest;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
@@ -78,35 +74,6 @@ public class FileController {
         // 返回文件下载的地址
         String url = fileBaseUrl + ":" + port + "/files/download/" + fileName;
         return Result.success(url);
-    }
-
-    private void doDownload(String fileName, HttpServletResponse response) {
-        // 说明：文件的公开读取已交给 WebConfig 的静态资源映射（/files/download/**），
-        // 因为浏览器的 <img> 无法携带 token 请求头。此处保留工具方法仅用于内部导出场景。
-        java.nio.file.Path base;
-        java.nio.file.Path target;
-        try {
-            base = java.nio.file.Paths.get(FILE_DIR).toAbsolutePath().normalize();
-            target = base.resolve(fileName).normalize();
-        } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-        if (!target.startsWith(base) || fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
-        // 设置下载文件http响应头
-        response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
-        try {
-            byte[] bytes = FileUtil.readBytes(target.toFile());
-            ServletOutputStream os = response.getOutputStream();
-            os.write(bytes);
-            os.flush();
-            os.close();
-        } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-        }
     }
 
     /**

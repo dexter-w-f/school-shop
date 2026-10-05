@@ -28,26 +28,6 @@ public class RefundOrdersController {
     @Resource
     private HttpServletRequest request;
 
-    private Integer requireAdminOrOrderOwner(RefundOrders refundOrders) {
-        if (refundOrders == null || refundOrders.getId() == null) {
-            return AdminControllerUtils.requireAdmin(request);
-        }
-        RefundOrders db = refundOrdersService.selectById(refundOrders.getId());
-        if (db == null) {
-            // 记录不存在时不泄露信息，要求管理员权限
-            return AdminControllerUtils.requireAdmin(request);
-        }
-        if (AdminControllerUtils.isAdmin(request)) {
-            return AuthValidator.requireUserId(request);
-        }
-        Integer currentUserId = AuthValidator.requireUserId(request);
-        if (!currentUserId.equals(db.getUserId())) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.FORBIDDEN, "无权操作该售后单");
-        }
-        return currentUserId;
-    }
-
     /**
      * 用户提交售后申请（只能对自己的订单申请）
      */
@@ -69,23 +49,25 @@ public class RefundOrdersController {
     }
 
     /**
-     * 删除
+     * 删除（仅管理员；管理端售后台账）
      */
     @DeleteMapping("/delete/{id}")
     public Result deleteById(@PathVariable Integer id) {
-        RefundOrders refundOrders = new RefundOrders();
-        refundOrders.setId(id);
-        requireAdminOrOrderOwner(refundOrders);
+        AdminControllerUtils.requireAdmin(request);
         refundOrdersService.deleteById(id);
         return Result.success();
     }
 
     /**
-     * 修改
+     * 修改（仅管理员）。
+     *
+     * 说明：原先允许"售后单归属用户"调用，普通用户可以改自己的售后单状态/金额，
+     * 会绕过"审核通过 → 执行退款"的正规流程。管理端页面并未使用该接口，故收紧为仅管理员。
+     * 状态流转请走 /approve、/reject、/refund。
      */
     @PutMapping("/update")
     public Result updateById(@RequestBody RefundOrders refundOrders) {
-        requireAdminOrOrderOwner(refundOrders);
+        AdminControllerUtils.requireAdmin(request);
         refundOrdersService.updateById(refundOrders);
         return Result.success();
     }

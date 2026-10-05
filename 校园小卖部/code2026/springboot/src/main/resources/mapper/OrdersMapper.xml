@@ -135,7 +135,7 @@
     </update>
 
     <select id="sumTotal" resultType="java.math.BigDecimal">
-        select ifnull(sum(total), 0) from `orders` where status != '已取消'
+        select ifnull(sum(total), 0) from `orders` where status != #{status}
     </select>
 
     <select id="sumTotalByTime" resultType="java.math.BigDecimal">

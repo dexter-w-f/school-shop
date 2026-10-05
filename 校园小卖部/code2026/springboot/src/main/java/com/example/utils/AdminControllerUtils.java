@@ -16,18 +16,27 @@ public class AdminControllerUtils {
         String currentUserId = request.getHeader("X-Current-UserId");
         String currentRole = normalizeRole(request.getHeader("X-Current-Role"));
         String token = request.getHeader("token");
-        if (!StringUtils.hasText(currentUserId) || !"管理员".equals(currentRole) || !StringUtils.hasText(token)) {
-            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "未登录，请先登录");
+
+        // 未登录：401，前端据此跳登录页
+        if (!StringUtils.hasText(currentUserId) || !StringUtils.hasText(token)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未登录，请先登录");
+        }
+        // 已登录但不是管理员：403。必须与 401 区分，否则前端会把"无权限"当成"登录过期"而反复跳登录页
+        if (!"管理员".equals(currentRole)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "无管理员权限");
         }
         Integer userId;
         try {
             userId = Integer.valueOf(currentUserId.trim());
         } catch (NumberFormatException e) {
-            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED, "未登录，请先登录");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未登录，请先登录");
         }
         String userInfo = TokenUtils.getUserInfo(token);
-        if (userInfo == null || !("user=" + userId + ";role=管理员").equals(userInfo)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "未登录，请先登录");
+        if (userInfo == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "登录已过期，请重新登录");
+        }
+        if (!("user=" + userId + ";role=管理员").equals(userInfo)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "无管理员权限");
         }
         return userId;
     }
