@@ -14,6 +14,8 @@ request.interceptors.request.use(config => {
     const user = JSON.parse(localStorage.getItem('system-user') || '{}');
     if (user.token) {
         config.headers['token'] = user.token;
+        config.headers['X-Current-UserId'] = user.id ?? '';
+        config.headers['X-Current-Role'] = user.role ?? '';
     }
     return config
 }, error => {
