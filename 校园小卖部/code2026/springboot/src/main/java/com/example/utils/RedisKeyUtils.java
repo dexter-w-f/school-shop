@@ -44,4 +44,11 @@ public class RedisKeyUtils {
             return seckillStockTtl();
         }
     }
+
+    /**
+     * 秒杀用户参与锁 key，避免同一用户对同一活动重复购买。
+     */
+    public static String seckillUserBuyKey(Integer activityId, Integer userId) {
+        return "seckill:user_buy:" + activityId + ":" + userId;
+    }
 }

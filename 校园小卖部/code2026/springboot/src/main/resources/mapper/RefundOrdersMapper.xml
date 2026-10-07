@@ -91,4 +91,10 @@
         </set>
         where id = #{id}
     </update>
+
+    <update id="updateStatusIfApproved">
+        update `refund_orders`
+        set status = #{status}
+        where id = #{id} and status = '已通过'
+    </update>
 </mapper>

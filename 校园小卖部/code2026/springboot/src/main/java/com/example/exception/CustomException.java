@@ -7,6 +7,11 @@ public class CustomException extends RuntimeException {
         this.msg = msg;
     }
 
+    public CustomException(String msg, Throwable cause) {
+        super(msg, cause);
+        this.msg = msg;
+    }
+
     public String getMsg() {
         return msg;
     }

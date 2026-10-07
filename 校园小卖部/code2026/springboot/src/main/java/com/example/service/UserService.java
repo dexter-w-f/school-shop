@@ -84,6 +84,18 @@ public class UserService {
         userMapper.updateById(dbUser);
     }
 
+    public void updateProfile(User user) {
+        if (user == null || user.getId() == null) {
+            throw new CustomException("用户信息不合法");
+        }
+        if (StrUtil.isNotBlank(user.getPassword())) {
+            user.setPassword(PasswordUtils.encode(user.getPassword()));
+        } else {
+            user.setPassword(null);
+        }
+        userMapper.updateById(user);
+    }
+
     public List<User> selectAll(String  name) {
         return userMapper.selectAll(name);
     }
