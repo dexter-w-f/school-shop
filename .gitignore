@@ -23,3 +23,17 @@ Thumbs.db
 # Files directory (uploaded files)
 files/
 *.msi
+
+# 本地开发脚本（BOM/编码 修复、扫描等一次性工具，不应入库）
+boms.py
+check_bom.*
+remove_bom.*
+fix_boms.js
+fix_chat.js
+clean_java_files.js
+restore_from_git_head.js
+scan_backslashes.ps1
+scan_illegal.ps1
+
+# 本地 Maven 临时文件（spring-boot-starter-parent 之类被手工下载到根目录的 pom）
+spring-boot-starter-parent-*.pom
