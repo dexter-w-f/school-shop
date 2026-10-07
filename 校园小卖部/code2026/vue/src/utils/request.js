@@ -15,7 +15,11 @@ request.interceptors.request.use(config => {
     if (user.token) {
         config.headers['token'] = user.token;
         config.headers['X-Current-UserId'] = user.id ?? '';
-        config.headers['X-Current-Role'] = user.role ?? '';
+        // 角色是中文（管理员/普通用户），而 HTTP 请求头只允许 ISO-8859-1 字符，
+        // 直接发送会让浏览器抛 "String contains non ISO-8859-1 code point" 并导致整个请求发不出去。
+        // 这里做百分号编码，转成纯 ASCII；后端 AuthInterceptor / AdminControllerUtils
+        // 的 normalizeRole() 会用 URLDecoder 解回原始角色再比对。
+        config.headers['X-Current-Role'] = encodeURIComponent(user.role ?? '');
     }
     return config
 }, error => {
