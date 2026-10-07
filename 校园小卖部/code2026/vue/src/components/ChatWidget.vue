@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div>
     <!-- 浮动客服按钮 -->
     <div @click="toggle" 

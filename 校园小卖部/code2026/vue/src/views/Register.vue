@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="login-container">
     <div class="login-box">
       <div style="font-weight: bold; font-size: 30px; text-align: center; margin-bottom: 30px; color: #19e348">欢 迎 注 册</div>

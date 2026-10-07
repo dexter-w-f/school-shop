@@ -25,14 +25,14 @@ public class CartService {
      * 新增
      */
     public void add(Cart cart) {
-        Cart dbCart = cartMapper.selectByGoodsIdAndUserId(cart.getGoodsId(),cart.getUserId());
-        if (dbCart != null) {
-            dbCart.setNum(dbCart.getNum() + cart.getNum());
-            cartMapper.updateById(dbCart);
-        } else {
+        Cart dbCart = cartMapper.selectByGoodsIdAndUserId(cart.getGoodsId(), cart.getUserId());
+        if (dbCart == null) {
             cartMapper.insert(cart);
+            return;
         }
 
+        dbCart.setNum(dbCart.getNum() + cart.getNum());
+        cartMapper.updateById(dbCart);
     }
 
     /**

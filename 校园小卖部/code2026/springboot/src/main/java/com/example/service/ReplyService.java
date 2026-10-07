@@ -21,12 +21,7 @@ public class ReplyService {
     public void add(Reply reply) {
         reply.setTime(DateUtil.now());
         replyMapper.insert(reply);
-        // 更新帖子回复数
-        com.example.entity.Post post = postMapper.selectById(reply.getPostId());
-        if (post != null) {
-            post.setReplyCount(post.getReplyCount() + 1);
-            postMapper.updateById(post);
-        }
+        postMapper.incrementReplyCount(reply.getPostId());
     }
 
     @Transactional
@@ -34,10 +29,8 @@ public class ReplyService {
         Reply reply = replyMapper.selectById(id);
         if (reply != null) {
             replyMapper.deleteById(id);
-            com.example.entity.Post post = postMapper.selectById(reply.getPostId());
-            if (post != null && post.getReplyCount() > 0) {
-                post.setReplyCount(post.getReplyCount() - 1);
-                postMapper.updateById(post);
+            if (reply.getPostId() != null) {
+                postMapper.decrementReplyCount(reply.getPostId());
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div>
     <div class="card" style="margin-bottom: 10px; display: flex; align-items: center; gap: 15px; padding: 15px;">
       <span style="font-weight: bold;">秒杀活动</span>

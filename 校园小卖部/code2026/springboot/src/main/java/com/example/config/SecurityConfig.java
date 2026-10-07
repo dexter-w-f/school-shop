@@ -4,25 +4,24 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Security配置类 - 仅使用BCrypt加密功能，禁用安全拦截
+ * Security配置类 - 禁用整体安全拦截，避免拦截文档/静态资源。
+ * 业务鉴权统一由 AuthInterceptor + AdminControllerUtils 控制。
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    
-    /**
-     * 配置安全过滤链，放行所有请求
-     */
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(CsrfConfigurer::disable)  // 禁用CSRF
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()  // 允许所有请求
+                .anyRequest().permitAll()
             );
         return http.build();
     }

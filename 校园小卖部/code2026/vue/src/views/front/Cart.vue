@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="front-container">
     <div class="card" style="padding: 20px">
       <div>

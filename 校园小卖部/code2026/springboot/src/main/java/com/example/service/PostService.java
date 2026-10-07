@@ -38,23 +38,18 @@ public class PostService {
 
     @Transactional
     public void updateViewCount(Integer id) {
-        Post post = postMapper.selectById(id);
-        if (post != null) { post.setViewCount(post.getViewCount() + 1); postMapper.updateById(post); }
+        postMapper.incrementViewCount(id);
     }
 
     @Transactional
     public int toggleLike(Integer id, Integer userId) {
-        Post post = postMapper.selectById(id);
-        if (post == null) return 0;
         if (likeRecordMapper.checkLiked(id, userId) > 0) {
             likeRecordMapper.deleteLike(id, userId);
-            post.setLikeCount(post.getLikeCount() - 1);
-            postMapper.updateById(post);
+            postMapper.decrementLikeCount(id);
             return -1;
         } else {
             likeRecordMapper.insertLike(id, userId);
-            post.setLikeCount(post.getLikeCount() + 1);
-            postMapper.updateById(post);
+            postMapper.incrementLikeCount(id);
             return 1;
         }
     }
