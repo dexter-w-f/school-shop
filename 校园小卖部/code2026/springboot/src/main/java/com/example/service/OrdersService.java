@@ -115,12 +115,43 @@ public class OrdersService {
     }
 
     /**
-     * 删除
+     * 删除订单。
+     *
+     * 原先只删表、不回补库存，导致"下单扣库存 → 删单"会凭空吃掉库存。
+     * 现按订单状态回滚：
+     * - 已取消：取消时已回补过库存，且可能已退款 → 不再处理，避免重复退；
+     * - 已完成：交易已终结，库存视为正常售出 → 不回补；
+     * - 其余（待支付/待接单/已出货/已配送/待收货）：仍占用着库存，删除时回补，
+     *   并按支付方式决定是否退回余额（与取消订单的口径一致）。
      */
     @Transactional
     public void deleteById(Integer id) {
-        ordersMapper.deleteById(id);
+        Orders current = ordersMapper.selectById(id);
+        if (current == null) {
+            return;
+        }
+        boolean terminal = "已取消".equals(current.getStatus()) || "已完成".equals(current.getStatus());
+        if (!terminal) {
+            // 回补库存（原子操作）
+            OrderDetail query = new OrderDetail();
+            query.setOrderId(id);
+            List<OrderDetail> details = orderDetailMapper.selectAll(query);
+            for (OrderDetail detail : details) {
+                goodsMapper.updateStoreRestore(detail.getGoodsId(), detail.getNum());
+            }
+            // 退款口径与取消订单一致：仅第三方渠道不退回余额；待支付未扣款，无需退
+            String payType = current.getPayType();
+            boolean thirdPartyPaid = payType != null && !payType.isBlank() && !"余额支付".equals(payType);
+            if (!thirdPartyPaid && !"待支付".equals(current.getStatus())) {
+                User user = userMapper.selectById(current.getUserId());
+                if (user != null && current.getTotal() != null && user.getAccount() != null) {
+                    user.setAccount(user.getAccount().add(current.getTotal()));
+                    userMapper.updateById(user);
+                }
+            }
+        }
         orderDetailMapper.deleteByOrderId(id);
+        ordersMapper.deleteById(id);
     }
 
     /**
